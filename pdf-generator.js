@@ -47,7 +47,7 @@ const commonStyles = `
     border-bottom: 2px solid #6B1D2A;
   }
 
-  .logo { width: 72px; height: 72px; }
+  .logo { width: 72px; height: auto; object-fit: contain; }
 
   .header-text h1 {
     font-family: 'Playfair Display', Georgia, serif;

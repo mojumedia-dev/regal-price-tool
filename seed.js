@@ -96,7 +96,7 @@ db.prepare(`INSERT OR REPLACE INTO users (id, email, password_hash, name, role) 
 db.prepare(`INSERT OR REPLACE INTO users (id, email, password_hash, name, role) VALUES (2, 'admin@regalhomes.com', ?, 'Admin', 'admin')`).run(hash);
 
 // Seed Parkside community
-db.prepare(`INSERT OR REPLACE INTO communities (id, name, slug, phone, website, sales_office_address, sales_office_city, sales_office_hours, sales_manager_name, sales_manager_phone, sales_manager_email) VALUES (1, 'Parkside', 'parkside', '385-446-5524', 'REGALUT.COM', '526 N LEGEND WAY', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com')`).run();
+db.prepare(`INSERT OR REPLACE INTO communities (id, name, slug, phone, website, sales_office_address, sales_office_city, sales_office_hours, sales_manager_name, sales_manager_phone, sales_manager_email) VALUES (1, 'Parkside', 'parkside', '385-446-5524', 'REGALUT.COM', '2458 W Aurora Ave', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com')`).run();
 
 // Assign communities to users
 db.prepare(`INSERT OR REPLACE INTO user_communities (user_id, community_id) VALUES (1, 1)`).run();
