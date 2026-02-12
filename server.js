@@ -105,6 +105,32 @@ app.get('/api/communities/:id/available-homes', auth, (req, res) => {
   res.json(homes);
 });
 
+// Update any allowed field
+app.put('/api/:type/:id/field', auth, (req, res) => {
+  const { type, id } = req.params;
+  const { field, value } = req.body;
+  
+  const allowedFields = {
+    plans: ['total_sqft', 'finished_sqft_range', 'floors', 'beds_range', 'baths_range', 'garage_range'],
+    homesites: ['lot_number', 'address', 'front_facing_direction', 'sqft'],
+    'available-homes': ['plan_name', 'address', 'total_sqft', 'finished_sqft', 'beds', 'baths', 'garage', 'est_move_in'],
+  };
+  
+  const tableMap = { plans: 'plans', homesites: 'homesites', 'available-homes': 'available_homes' };
+  const table = tableMap[type];
+  if (!table || !allowedFields[type]?.includes(field)) return res.status(400).json({ error: 'Invalid type or field' });
+  
+  const current = db.prepare(`SELECT ${field} as val FROM ${table} WHERE id = ?`).get(id);
+  if (!current) return res.status(404).json({ error: 'Not found' });
+  
+  db.prepare(`INSERT INTO price_change_log (user_id, entity_type, entity_id, field_name, old_value, new_value) VALUES (?, ?, ?, ?, ?, ?)`).run(
+    req.user.id, type, id, field, String(current.val), String(value)
+  );
+  
+  db.prepare(`UPDATE ${table} SET ${field} = ? WHERE id = ?`).run(value, id);
+  res.json({ ok: true, old: current.val, new: value });
+});
+
 // Update price
 app.put('/api/:type/:id/price', auth, (req, res) => {
   const { type, id } = req.params;

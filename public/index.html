@@ -61,6 +61,11 @@
     .price-input:focus { outline: none; border-color: #6B1D2A; box-shadow: 0 0 0 3px rgba(107,29,42,0.1); }
     .price-input.changed { border-color: #E67E22; background: #FEF9E7; }
     .price-input.saved { border-color: #27AE60; background: #EAFAF1; }
+    .field-input { width: 100%; padding: 5px 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 13px; font-family: inherit; text-align: center; background: transparent; }
+    .field-input:focus { outline: none; border-color: #6B1D2A; background: white; box-shadow: 0 0 0 2px rgba(107,29,42,0.1); }
+    .field-input.changed { border-color: #E67E22; background: #FEF9E7; }
+    .field-input.saved { border-color: #27AE60; background: #EAFAF1; }
+    .field-input.short { width: 70px; }
     
     /* Actions */
     .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
@@ -250,9 +255,10 @@ async function loadHomesites(cid) {
     <table class="data-table">
       <thead><tr><th>Lot</th><th>Address</th><th>Direction</th><th>SQ.FT</th><th>Homesite Premium</th></tr></thead>
       <tbody>${data.map(d => `<tr>
-        <td>${d.lot_number}</td><td style="text-align:center">${d.address}</td>
-        <td style="text-align:center">${d.front_facing_direction}</td>
-        <td style="text-align:center">${Number(d.sqft).toLocaleString()}</td>
+        <td><input class="field-input" type="text" value="${d.lot_number}" data-type="homesites" data-id="${d.id}" data-field="lot_number" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input" type="text" value="${d.address}" data-type="homesites" data-id="${d.id}" data-field="address" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.front_facing_direction}" data-type="homesites" data-id="${d.id}" data-field="front_facing_direction" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.sqft}" data-type="homesites" data-id="${d.id}" data-field="sqft" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.premium_price)}" data-type="homesites" data-id="${d.id}" data-original="${d.premium_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
       </tr>`).join('')}</tbody>
     </table>
@@ -282,10 +288,13 @@ async function loadBasePrices(cid) {
           ? `<span class="sync-badge ${sync.status}" title="${sync.error_message || sync.status}">${sync.status}</span>`
           : `<span class="sync-badge none">—</span>`;
         return `<tr>
-        <td>${d.name}</td><td style="text-align:center">${Number(d.total_sqft).toLocaleString()}</td>
-        <td style="text-align:center">${d.finished_sqft_range}</td><td style="text-align:center">${d.floors}</td>
-        <td style="text-align:center">${d.beds_range}</td><td style="text-align:center">${d.baths_range}</td>
-        <td style="text-align:center">${d.garage_range}</td>
+        <td>${d.name}</td>
+        <td><input class="field-input short" type="text" value="${d.total_sqft}" data-type="plans" data-id="${d.id}" data-field="total_sqft" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input" type="text" value="${d.finished_sqft_range}" data-type="plans" data-id="${d.id}" data-field="finished_sqft_range" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.floors}" data-type="plans" data-id="${d.id}" data-field="floors" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.beds_range}" data-type="plans" data-id="${d.id}" data-field="beds_range" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.baths_range}" data-type="plans" data-id="${d.id}" data-field="baths_range" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.garage_range}" data-type="plans" data-id="${d.id}" data-field="garage_range" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.base_price)}" data-type="plans" data-id="${d.id}" data-original="${d.base_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
         <td style="text-align:center">${syncBadge}<br><button class="btn-sync" onclick="syncToHomefiniti(${d.id}, this)" title="Sync to Homefiniti">🔄 Sync</button></td>
       </tr>`;
@@ -303,11 +312,14 @@ async function loadAvailableHomes(cid) {
     <table class="data-table">
       <thead><tr><th>Plan</th><th>Address</th><th>Total SQFT</th><th>Finished</th><th>Beds</th><th>Baths</th><th>Gar</th><th>Est. Move In</th><th>Price</th></tr></thead>
       <tbody>${data.map(d => `<tr>
-        <td>${d.plan_name}</td><td style="text-align:center">${d.address}</td>
-        <td style="text-align:center">${Number(d.total_sqft).toLocaleString()}</td>
-        <td style="text-align:center">${Number(d.finished_sqft).toLocaleString()}</td>
-        <td style="text-align:center">${d.beds}</td><td style="text-align:center">${d.baths}</td>
-        <td style="text-align:center">${d.garage}</td><td style="text-align:center">${d.est_move_in}</td>
+        <td><input class="field-input" type="text" value="${d.plan_name}" data-type="available-homes" data-id="${d.id}" data-field="plan_name" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input" type="text" value="${d.address}" data-type="available-homes" data-id="${d.id}" data-field="address" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.total_sqft}" data-type="available-homes" data-id="${d.id}" data-field="total_sqft" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.finished_sqft}" data-type="available-homes" data-id="${d.id}" data-field="finished_sqft" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.beds}" data-type="available-homes" data-id="${d.id}" data-field="beds" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.baths}" data-type="available-homes" data-id="${d.id}" data-field="baths" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input short" type="text" value="${d.garage}" data-type="available-homes" data-id="${d.id}" data-field="garage" onchange="fieldChanged(this)"></td>
+        <td><input class="field-input" type="text" value="${d.est_move_in}" data-type="available-homes" data-id="${d.id}" data-field="est_move_in" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
       </tr>`).join('')}</tbody>
     </table>
@@ -336,6 +348,15 @@ function parsePrice(s) {
   return parseInt(s.replace(/[$,]/g, ''), 10) || 0;
 }
 
+let pendingFieldChanges = {};
+
+function fieldChanged(input) {
+  const key = `${input.dataset.type}-${input.dataset.id}-${input.dataset.field}`;
+  input.classList.add('changed');
+  input.classList.remove('saved');
+  pendingFieldChanges[key] = { type: input.dataset.type, id: input.dataset.id, field: input.dataset.field, value: input.value };
+}
+
 function priceChanged(input) {
   const raw = parsePrice(input.value);
   input.value = formatPrice(raw);
@@ -352,8 +373,11 @@ function priceChanged(input) {
 }
 
 async function saveAll(tabType) {
-  const changes = Object.values(pendingChanges).filter(c => c.type === tabType || (tabType === 'base-prices' && c.type === 'plans'));
-  if (!changes.length) { toast('No changes to save', 'info'); return; }
+  const tabTypeMap = { 'base-prices': 'plans', 'homesites': 'homesites', 'available-homes': 'available-homes' };
+  const matchType = tabTypeMap[tabType] || tabType;
+  const changes = Object.values(pendingChanges).filter(c => c.type === matchType || c.type === tabType);
+  const fieldChanges = Object.values(pendingFieldChanges).filter(c => c.type === matchType || c.type === tabType);
+  if (!changes.length && !fieldChanges.length) { toast('No changes to save', 'info'); return; }
   
   const statusEl = document.getElementById(`status-${tabType}`);
   statusEl.textContent = 'Saving...';
@@ -375,9 +399,19 @@ async function saveAll(tabType) {
       }
       delete pendingChanges[`${change.type}-${change.id}`];
     }
-    statusEl.textContent = `✅ ${changes.length} price(s) saved`;
+    for (const fc of fieldChanges) {
+      await api(`/api/${fc.type}/${fc.id}/field`, {
+        method: 'PUT',
+        body: JSON.stringify({ field: fc.field, value: fc.value }),
+      });
+      const input = document.querySelector(`input[data-type="${fc.type}"][data-id="${fc.id}"][data-field="${fc.field}"]`);
+      if (input) { input.classList.remove('changed'); input.classList.add('saved'); setTimeout(() => input.classList.remove('saved'), 2000); }
+      delete pendingFieldChanges[`${fc.type}-${fc.id}-${fc.field}`];
+    }
+    const totalSaved = changes.length + fieldChanges.length;
+    statusEl.textContent = `✅ ${totalSaved} change(s) saved`;
     statusEl.className = 'save-status success';
-    toast(`${changes.length} price(s) saved successfully!`, 'success');
+    toast(`${totalSaved} change(s) saved successfully!`, 'success');
   } catch (err) {
     statusEl.textContent = '❌ Save failed';
     statusEl.className = 'save-status error';
