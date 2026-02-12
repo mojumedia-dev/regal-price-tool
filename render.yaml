@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: regal-homes-price-tool
+    runtime: node
+    buildCommand: npm install && npm run seed
+    startCommand: npm start
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: regal-data
+      mountPath: /opt/render/project/src/db
+      sizeGB: 1

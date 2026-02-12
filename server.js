@@ -10,10 +10,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
 
-// DB
-const db = new Database(path.join(__dirname, 'db', 'regal.db'));
+// DB - auto-seed if not exists
+const dbDir = path.join(__dirname, 'db');
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+const dbPath = path.join(dbDir, 'regal.db');
+const needsSeed = !fs.existsSync(dbPath);
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+if (needsSeed) {
+  console.log('🌱 First run - seeding database...');
+  require('./seed');
+  console.log('✅ Database seeded');
+}
 
 app.use(express.json());
 app.use(cookieParser());
