@@ -92,7 +92,7 @@ db.exec(`
 
 // Seed user
 const hash = bcrypt.hashSync('RegalHomes2026!', 10);
-db.prepare(`INSERT OR REPLACE INTO users (id, email, password_hash, name, role) VALUES (1, 'heather@regalhomes.com', ?, 'Heather', 'editor')`).run(hash);
+db.prepare(`INSERT OR REPLACE INTO users (id, email, password_hash, name, role) VALUES (1, 'heatherb@regalut.com', ?, 'Heather', 'editor')`).run(hash);
 db.prepare(`INSERT OR REPLACE INTO users (id, email, password_hash, name, role) VALUES (2, 'admin@regalhomes.com', ?, 'Admin', 'admin')`).run(hash);
 
 // Seed Parkside community
