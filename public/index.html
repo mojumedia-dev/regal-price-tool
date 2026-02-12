@@ -97,6 +97,17 @@
     .toast.info { background: #2980B9; }
 
     .generating { opacity: 0.6; pointer-events: none; }
+
+    /* Homefiniti Sync */
+    .sync-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sync-badge.pending { background: #FEF9E7; color: #E67E22; animation: pulse 1.5s infinite; }
+    .sync-badge.synced { background: #EAFAF1; color: #27AE60; }
+    .sync-badge.failed { background: #FDEDEC; color: #E74C3C; cursor: pointer; }
+    .sync-badge.none { background: #F0F0F0; color: #999; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .btn-sync { padding: 4px 10px; font-size: 11px; background: #3498DB; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .btn-sync:hover { background: #2980B9; }
+    .btn-sync:disabled { background: #BDC3C7; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -250,19 +261,35 @@ async function loadHomesites(cid) {
 
 // Base Prices
 async function loadBasePrices(cid) {
-  const res = await api(`/api/communities/${cid}/plans`);
-  const data = await res.json();
+  const [plansRes, syncRes] = await Promise.all([
+    api(`/api/communities/${cid}/plans`),
+    api('/api/homefiniti/plan-status'),
+  ]);
+  const data = await plansRes.json();
+  const syncStatuses = await syncRes.json();
+  
+  // Map plan name -> latest sync status
+  const syncMap = {};
+  syncStatuses.forEach(s => { syncMap[s.plan_name] = s; });
+  
   const el = document.getElementById('tab-base-prices');
   el.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Plan</th><th>Total SQFT</th><th>Finished SQFT</th><th>Floors</th><th>Beds</th><th>Baths</th><th>Garage</th><th>Starting At</th></tr></thead>
-      <tbody>${data.map(d => `<tr>
+      <thead><tr><th>Plan</th><th>Total SQFT</th><th>Finished SQFT</th><th>Floors</th><th>Beds</th><th>Baths</th><th>Garage</th><th>Starting At</th><th>Homefiniti</th></tr></thead>
+      <tbody>${data.map(d => {
+        const sync = syncMap[d.name] || null;
+        const syncBadge = sync
+          ? `<span class="sync-badge ${sync.status}" title="${sync.error_message || sync.status}">${sync.status}</span>`
+          : `<span class="sync-badge none">—</span>`;
+        return `<tr>
         <td>${d.name}</td><td style="text-align:center">${Number(d.total_sqft).toLocaleString()}</td>
         <td style="text-align:center">${d.finished_sqft_range}</td><td style="text-align:center">${d.floors}</td>
         <td style="text-align:center">${d.beds_range}</td><td style="text-align:center">${d.baths_range}</td>
         <td style="text-align:center">${d.garage_range}</td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.base_price)}" data-type="plans" data-id="${d.id}" data-original="${d.base_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
-      </tr>`).join('')}</tbody>
+        <td style="text-align:center">${syncBadge}<br><button class="btn-sync" onclick="syncToHomefiniti(${d.id}, this)" title="Sync to Homefiniti">🔄 Sync</button></td>
+      </tr>`;
+      }).join('')}</tbody>
     </table>
     ${actionsHTML('base-prices')}`;
 }
@@ -409,6 +436,56 @@ async function showAuditLog() {
       <td><strong>${formatPrice(l.new_value)}</strong></td>
     </tr>`).join('')}</tbody>
   </table>`;
+}
+
+// Homefiniti Sync
+async function syncToHomefiniti(planId, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  toast('Syncing to Homefiniti...', 'info');
+  
+  try {
+    const res = await api(`/api/homefiniti/sync/${planId}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      toast(`${data.message} - syncing in background`, 'success');
+      // Poll for completion
+      pollSyncStatus(btn);
+    } else {
+      toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync';
+    }
+  } catch (err) {
+    toast('Sync error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync';
+  }
+}
+
+function pollSyncStatus(btn) {
+  let attempts = 0;
+  const poll = setInterval(async () => {
+    attempts++;
+    if (attempts > 30) { // 60 seconds max
+      clearInterval(poll);
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync';
+      return;
+    }
+    try {
+      const res = await api('/api/homefiniti/plan-status');
+      const statuses = await res.json();
+      const hasPending = statuses.some(s => s.status === 'pending');
+      if (!hasPending) {
+        clearInterval(poll);
+        // Reload the base prices tab to show updated sync statuses
+        const cid = document.getElementById('communitySelect').value;
+        await loadBasePrices(cid);
+        toast('Homefiniti sync complete!', 'success');
+      }
+    } catch {}
+  }, 2000);
 }
 
 function toast(msg, type = 'info') {

@@ -6,6 +6,8 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
+const { updatePlanPrice, getHomefinitiPlanId, normalizePlanName, PLAN_ID_MAP } = require('./homefiniti-sync');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
@@ -23,6 +25,21 @@ if (needsSeed) {
   require('./seed');
   console.log('✅ Database seeded');
 }
+
+// Create homefiniti_sync_log table if not exists
+db.exec(`
+  CREATE TABLE IF NOT EXISTS homefiniti_sync_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_name TEXT NOT NULL,
+    plan_id INTEGER,
+    old_price INTEGER,
+    new_price INTEGER,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME
+  )
+`);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -113,7 +130,34 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
   // Update
   db.prepare(`UPDATE ${config.table} SET ${config.field} = ? WHERE id = ?`).run(price, id);
   
-  res.json({ ok: true, old: current.price, new: price });
+  // Trigger Homefiniti sync for plan base price changes (non-blocking)
+  let syncStatus = null;
+  if (type === 'plans') {
+    const plan = db.prepare('SELECT name FROM plans WHERE id = ?').get(id);
+    if (plan && getHomefinitiPlanId(plan.name)) {
+      syncStatus = 'pending';
+      // Insert sync log entry
+      const syncLog = db.prepare(
+        'INSERT INTO homefiniti_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+      ).run(plan.name, id, current.price, price, 'pending');
+      const syncLogId = syncLog.lastInsertRowid;
+      
+      // Fire and forget - don't block the response
+      updatePlanPrice(plan.name, price).then(result => {
+        db.prepare(
+          'UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?'
+        ).run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+        console.log(`[Sync] ${plan.name}: ${result.success ? '✅ synced' : '❌ ' + result.message}`);
+      }).catch(err => {
+        db.prepare(
+          'UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?'
+        ).run('failed', err.message, syncLogId);
+        console.error(`[Sync] ${plan.name}: ❌ ${err.message}`);
+      });
+    }
+  }
+  
+  res.json({ ok: true, old: current.price, new: price, homefinitiSync: syncStatus });
 });
 
 // Audit log
@@ -126,6 +170,52 @@ app.get('/api/audit-log', auth, (req, res) => {
     LIMIT 100
   `).all();
   res.json(logs);
+});
+
+// Homefiniti sync status
+app.get('/api/homefiniti/sync-status', auth, (req, res) => {
+  const logs = db.prepare(`
+    SELECT * FROM homefiniti_sync_log ORDER BY created_at DESC LIMIT 50
+  `).all();
+  res.json(logs);
+});
+
+// Get latest sync status per plan
+app.get('/api/homefiniti/plan-status', auth, (req, res) => {
+  const statuses = db.prepare(`
+    SELECT plan_name, plan_id, status, new_price, error_message, completed_at, created_at
+    FROM homefiniti_sync_log
+    WHERE id IN (SELECT MAX(id) FROM homefiniti_sync_log GROUP BY plan_name)
+    ORDER BY created_at DESC
+  `).all();
+  res.json(statuses);
+});
+
+// Manual sync trigger
+app.post('/api/homefiniti/sync/:planId', auth, (req, res) => {
+  const plan = db.prepare('SELECT * FROM plans WHERE id = ?').get(req.params.planId);
+  if (!plan) return res.status(404).json({ error: 'Plan not found' });
+  
+  if (!getHomefinitiPlanId(plan.name)) {
+    return res.status(400).json({ error: `Plan "${plan.name}" not mapped to Homefiniti` });
+  }
+  
+  const syncLog = db.prepare(
+    'INSERT INTO homefiniti_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+  const syncLogId = syncLog.lastInsertRowid;
+  
+  updatePlanPrice(plan.name, plan.base_price).then(result => {
+    db.prepare(
+      'UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+  }).catch(err => {
+    db.prepare(
+      'UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run('failed', err.message, syncLogId);
+  });
+  
+  res.json({ ok: true, message: `Sync started for ${plan.name}`, syncLogId });
 });
 
 // PDF generation
