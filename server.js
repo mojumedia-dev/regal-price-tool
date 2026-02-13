@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
 
 // DB - auto-seed if not exists
-const dbDir = path.join(__dirname, 'db');
+const dbDir = process.env.DB_DIR || path.join(__dirname, 'db');
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 const dbPath = path.join(dbDir, 'regal.db');
 const needsSeed = !fs.existsSync(dbPath);

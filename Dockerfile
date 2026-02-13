@@ -31,11 +31,10 @@ RUN npm install --ignore-scripts
 RUN npm rebuild better-sqlite3 --build-from-source
 COPY . .
 
-# Create db directory
-RUN mkdir -p db
-
-RUN chmod +x start.sh
+# DB goes in /data (separate from /app so volume doesn't clobber node_modules)
+RUN mkdir -p /data
+ENV DB_DIR=/data
 
 ENV PORT=3000
 EXPOSE 3000
-CMD ["./start.sh"]
+CMD ["node", "server.js"]
