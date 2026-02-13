@@ -169,7 +169,7 @@
 <div id="auditModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center;">
   <div style="background:white; border-radius:12px; width:800px; max-height:80vh; overflow-y:auto; padding:32px; position:relative;">
     <button onclick="document.getElementById('auditModal').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
-    <h2 style="font-family:'Playfair Display',serif; color:#6B1D2A; margin-bottom:16px;">Price Change Audit Log</h2>
+    <h2 style="font-family:'Playfair Display',serif; color:#6B1D2A; margin-bottom:16px;">Change Audit Log</h2>
     <div id="auditContent"></div>
   </div>
 </div>
@@ -456,20 +456,25 @@ async function showAuditLog() {
   const res = await api('/api/audit-log');
   const logs = await res.json();
   const content = document.getElementById('auditContent');
-  if (!logs.length) { content.innerHTML = '<p style="color:#888;">No price changes recorded yet.</p>'; return; }
+  if (!logs.length) { content.innerHTML = '<p style="color:#888;">No changes recorded yet.</p>'; return; }
   
-  const typeLabels = { plans: 'Base Price', homesites: 'Homesite', 'available-homes': 'Available Home' };
-  const typeBadges = { plans: 'badge-plan', homesites: 'badge-lot', 'available-homes': 'badge-home' };
+  const typeLabels = { plans: 'Plan', homesites: 'Homesite', 'available-homes': 'Available Home' };
+  const fieldLabels = { base_price: 'Base Price', premium_price: 'Premium', price: 'Price', total_sqft: 'Total SQFT', finished_sqft_range: 'Finished SQFT', floors: 'Floors', beds_range: 'Beds', baths_range: 'Baths', garage_range: 'Garage', lot_number: 'Lot #', address: 'Address', front_facing_direction: 'Direction', sqft: 'SQ.FT', plan_name: 'Plan Name', finished_sqft: 'Finished SQFT', beds: 'Beds', baths: 'Baths', garage: 'Garage', est_move_in: 'Move In' };
+  
+  function formatVal(val, field) {
+    if (['base_price','premium_price','price'].includes(field)) return formatPrice(val);
+    return val || '—';
+  }
   
   content.innerHTML = `<table class="audit-table">
-    <thead><tr><th>When</th><th>Who</th><th>Type</th><th>Item #</th><th>Old Price</th><th>New Price</th></tr></thead>
+    <thead><tr><th>When</th><th>Who</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th></tr></thead>
     <tbody>${logs.map(l => `<tr>
       <td>${new Date(l.changed_at).toLocaleString()}</td>
       <td>${l.user_name}</td>
-      <td><span class="badge ${typeBadges[l.entity_type] || ''}">${typeLabels[l.entity_type] || l.entity_type}</span></td>
-      <td>#${l.entity_id}</td>
-      <td>${formatPrice(l.old_value)}</td>
-      <td><strong>${formatPrice(l.new_value)}</strong></td>
+      <td>${typeLabels[l.entity_type] || l.entity_type} #${l.entity_id}</td>
+      <td>${fieldLabels[l.field_name] || l.field_name}</td>
+      <td>${formatVal(l.old_value, l.field_name)}</td>
+      <td><strong>${formatVal(l.new_value, l.field_name)}</strong></td>
     </tr>`).join('')}</tbody>
   </table>`;
 }
