@@ -13,7 +13,19 @@ module.exports = function migrate(db) {
   if (already) return console.log('Migration 2026-02-13 already applied, skipping.');
   
   console.log('🔄 Applying migration 2026-02-13: PDF data update...');
-  
+
+  // Check if seed already populated homesites for community 4 (Amanti Lago)
+  const existing = db.prepare(`SELECT COUNT(*) as cnt FROM homesites WHERE community_id = 4`).get();
+  if (existing && existing.cnt > 0) {
+    console.log('  Homesites already populated by seed, skipping inserts (deduplicating)...');
+    // Remove duplicates — keep lowest id for each community+lot combo
+    db.exec(`DELETE FROM homesites WHERE id NOT IN (SELECT MIN(id) FROM homesites GROUP BY community_id, lot_number)`);
+    db.exec(`DELETE FROM available_homes WHERE id NOT IN (SELECT MIN(id) FROM available_homes GROUP BY community_id, address)`);
+    db.prepare(`INSERT INTO migrations (id) VALUES ('2026-02-13-pdf-data')`).run();
+    console.log('✅ Migration 2026-02-13 applied (dedup only)');
+    return;
+  }
+
   // Update community contacts
   db.prepare(`UPDATE communities SET phone=?, sales_office_address=?, sales_manager_name=?, sales_manager_phone=?, sales_manager_email=? WHERE id=2`)
     .run('801-598-4949', '526 N Legend Way', 'Gary Hansen', '801-598-4949', 'Gary.H@RegalUT.com');
