@@ -115,6 +115,12 @@
     .btn-sync { padding: 4px 10px; font-size: 11px; background: #3498DB; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; }
     .btn-sync:hover { background: #2980B9; }
     .btn-sync:disabled { background: #BDC3C7; cursor: not-allowed; }
+    .btn-sync.anewgo { background: #8E44AD; }
+    .btn-sync.anewgo:hover { background: #7D3C98; }
+    .btn-sync.zillow { background: #006AFF; }
+    .btn-sync.zillow:hover { background: #0055CC; }
+    .sync-cell { text-align: center; min-width: 80px; }
+    .sync-cell .sync-badge { display: block; margin-bottom: 2px; }
   </style>
 </head>
 <body>
@@ -269,26 +275,33 @@ async function loadHomesites(cid) {
 
 // Base Prices
 async function loadBasePrices(cid) {
-  const [plansRes, syncRes] = await Promise.all([
+  const [plansRes, hfRes, anRes, zlRes] = await Promise.all([
     api(`/api/communities/${cid}/plans`),
     api('/api/homefiniti/plan-status'),
+    api('/api/anewgo/plan-status'),
+    api('/api/zillow/plan-status'),
   ]);
   const data = await plansRes.json();
-  const syncStatuses = await syncRes.json();
+  const hfStatuses = await hfRes.json();
+  const anStatuses = await anRes.json();
+  const zlStatuses = await zlRes.json();
   
-  // Map plan name -> latest sync status
-  const syncMap = {};
-  syncStatuses.forEach(s => { syncMap[s.plan_name] = s; });
+  // Map plan name -> latest sync status per platform
+  const hfMap = {}, anMap = {}, zlMap = {};
+  hfStatuses.forEach(s => { hfMap[s.plan_name] = s; });
+  anStatuses.forEach(s => { anMap[s.plan_name] = s; });
+  zlStatuses.forEach(s => { zlMap[s.plan_name] = s; });
+
+  function syncBadgeHTML(sync) {
+    if (!sync) return '<span class="sync-badge none">—</span>';
+    return `<span class="sync-badge ${sync.status}" title="${sync.error_message || sync.status}">${sync.status}</span>`;
+  }
   
   const el = document.getElementById('tab-base-prices');
   el.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Plan</th><th>Total SQFT</th><th>Finished SQFT</th><th>Floors</th><th>Beds</th><th>Baths</th><th>Garage</th><th>Starting At</th><th>Homefiniti</th></tr></thead>
+      <thead><tr><th>Plan</th><th>Total SQFT</th><th>Finished SQFT</th><th>Floors</th><th>Beds</th><th>Baths</th><th>Garage</th><th>Starting At</th><th>Homefiniti</th><th>ANewGo</th><th>Zillow</th></tr></thead>
       <tbody>${data.map(d => {
-        const sync = syncMap[d.name] || null;
-        const syncBadge = sync
-          ? `<span class="sync-badge ${sync.status}" title="${sync.error_message || sync.status}">${sync.status}</span>`
-          : `<span class="sync-badge none">—</span>`;
         return `<tr>
         <td>${d.name}</td>
         <td><input class="field-input short" type="text" value="${d.total_sqft}" data-type="plans" data-id="${d.id}" data-field="total_sqft" onchange="fieldChanged(this)"></td>
@@ -298,7 +311,9 @@ async function loadBasePrices(cid) {
         <td><input class="field-input short" type="text" value="${d.baths_range}" data-type="plans" data-id="${d.id}" data-field="baths_range" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.garage_range}" data-type="plans" data-id="${d.id}" data-field="garage_range" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.base_price)}" data-type="plans" data-id="${d.id}" data-original="${d.base_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
-        <td style="text-align:center">${syncBadge}<br><button class="btn-sync" onclick="syncToHomefiniti(${d.id}, this)" title="Sync to Homefiniti">🔄 Sync</button></td>
+        <td class="sync-cell">${syncBadgeHTML(hfMap[d.name])}<button class="btn-sync" onclick="syncToPlatform('homefiniti', ${d.id}, this)" title="Sync to Homefiniti">🔄</button></td>
+        <td class="sync-cell">${syncBadgeHTML(anMap[d.name])}<button class="btn-sync anewgo" onclick="syncToPlatform('anewgo', ${d.id}, this)" title="Sync to ANewGo">🔄</button></td>
+        <td class="sync-cell">${syncBadgeHTML(zlMap[d.name])}<button class="btn-sync zillow" onclick="syncToPlatform('zillow', ${d.id}, this)" title="Sync to Zillow">🔄</button></td>
       </tr>`;
       }).join('')}</tbody>
     </table>
@@ -479,51 +494,51 @@ async function showAuditLog() {
   </table>`;
 }
 
-// Homefiniti Sync
-async function syncToHomefiniti(planId, btn) {
+// Platform Sync (unified for Homefiniti, ANewGo, Zillow)
+async function syncToPlatform(platform, planId, btn) {
   btn.disabled = true;
-  btn.textContent = '⏳ Syncing...';
-  toast('Syncing to Homefiniti...', 'info');
+  btn.textContent = '⏳';
+  const names = { homefiniti: 'Homefiniti', anewgo: 'ANewGo', zillow: 'Zillow' };
+  toast(`Syncing to ${names[platform]}...`, 'info');
   
   try {
-    const res = await api(`/api/homefiniti/sync/${planId}`, { method: 'POST' });
+    const res = await api(`/api/${platform}/sync/${planId}`, { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
       toast(`${data.message} - syncing in background`, 'success');
-      // Poll for completion
-      pollSyncStatus(btn);
+      pollPlatformSync(platform, btn);
     } else {
       toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
       btn.disabled = false;
-      btn.textContent = '🔄 Sync';
+      btn.textContent = '🔄';
     }
   } catch (err) {
     toast('Sync error: ' + err.message, 'error');
     btn.disabled = false;
-    btn.textContent = '🔄 Sync';
+    btn.textContent = '🔄';
   }
 }
 
-function pollSyncStatus(btn) {
+function pollPlatformSync(platform, btn) {
   let attempts = 0;
   const poll = setInterval(async () => {
     attempts++;
-    if (attempts > 30) { // 60 seconds max
+    if (attempts > 30) {
       clearInterval(poll);
       btn.disabled = false;
-      btn.textContent = '🔄 Sync';
+      btn.textContent = '🔄';
       return;
     }
     try {
-      const res = await api('/api/homefiniti/plan-status');
+      const res = await api(`/api/${platform}/plan-status`);
       const statuses = await res.json();
       const hasPending = statuses.some(s => s.status === 'pending');
       if (!hasPending) {
         clearInterval(poll);
-        // Reload the base prices tab to show updated sync statuses
         const cid = document.getElementById('communitySelect').value;
         await loadBasePrices(cid);
-        toast('Homefiniti sync complete!', 'success');
+        const names = { homefiniti: 'Homefiniti', anewgo: 'ANewGo', zillow: 'Zillow' };
+        toast(`${names[platform]} sync complete!`, 'success');
       }
     } catch {}
   }, 2000);

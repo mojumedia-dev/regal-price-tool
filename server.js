@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 
 const { updatePlanPrice, getHomefinitiPlanId, normalizePlanName, PLAN_ID_MAP } = require('./homefiniti-sync');
+const { updatePlanPrice: updateAnewgoPrice, getAnewgoPlanId } = require('./anewgo-sync');
+const { updatePlanPrice: updateZillowPrice, getZillowPlanId } = require('./zillow-sync');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,7 +28,7 @@ if (needsSeed) {
   console.log('✅ Database seeded');
 }
 
-// Create homefiniti_sync_log table if not exists
+// Create sync log tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS homefiniti_sync_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,7 +40,29 @@ db.exec(`
     error_message TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     completed_at DATETIME
-  )
+  );
+  CREATE TABLE IF NOT EXISTS anewgo_sync_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_name TEXT NOT NULL,
+    plan_id INTEGER,
+    old_price INTEGER,
+    new_price INTEGER,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME
+  );
+  CREATE TABLE IF NOT EXISTS zillow_sync_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_name TEXT NOT NULL,
+    plan_id INTEGER,
+    old_price INTEGER,
+    new_price INTEGER,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME
+  );
 `);
 
 app.use(express.json());
@@ -156,34 +180,39 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
   // Update
   db.prepare(`UPDATE ${config.table} SET ${config.field} = ? WHERE id = ?`).run(price, id);
   
-  // Trigger Homefiniti sync for plan base price changes (non-blocking)
-  let syncStatus = null;
+  // Trigger all platform syncs for plan base price changes (non-blocking)
+  let syncStatuses = {};
   if (type === 'plans') {
     const plan = db.prepare('SELECT name FROM plans WHERE id = ?').get(id);
-    if (plan && getHomefinitiPlanId(plan.name)) {
-      syncStatus = 'pending';
-      // Insert sync log entry
-      const syncLog = db.prepare(
-        'INSERT INTO homefiniti_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
-      ).run(plan.name, id, current.price, price, 'pending');
-      const syncLogId = syncLog.lastInsertRowid;
-      
-      // Fire and forget - don't block the response
-      updatePlanPrice(plan.name, price).then(result => {
-        db.prepare(
-          'UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?'
-        ).run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
-        console.log(`[Sync] ${plan.name}: ${result.success ? '✅ synced' : '❌ ' + result.message}`);
-      }).catch(err => {
-        db.prepare(
-          'UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?'
-        ).run('failed', err.message, syncLogId);
-        console.error(`[Sync] ${plan.name}: ❌ ${err.message}`);
-      });
+    if (plan) {
+      // Helper to fire sync for a platform
+      function firePlatformSync(platform, table, checkFn, syncFn) {
+        if (!checkFn(plan.name)) return;
+        syncStatuses[platform] = 'pending';
+        const log = db.prepare(
+          `INSERT INTO ${table} (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)`
+        ).run(plan.name, id, current.price, price, 'pending');
+        const logId = log.lastInsertRowid;
+        syncFn(plan.name, price).then(result => {
+          db.prepare(
+            `UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`
+          ).run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+          console.log(`[${platform}] ${plan.name}: ${result.success ? '✅ synced' : '❌ ' + result.message}`);
+        }).catch(err => {
+          db.prepare(
+            `UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`
+          ).run('failed', err.message, logId);
+          console.error(`[${platform}] ${plan.name}: ❌ ${err.message}`);
+        });
+      }
+
+      firePlatformSync('Homefiniti', 'homefiniti_sync_log', getHomefinitiPlanId, updatePlanPrice);
+      firePlatformSync('ANewGo', 'anewgo_sync_log', getAnewgoPlanId, updateAnewgoPrice);
+      firePlatformSync('Zillow', 'zillow_sync_log', getZillowPlanId, updateZillowPrice);
     }
   }
   
-  res.json({ ok: true, old: current.price, new: price, homefinitiSync: syncStatus });
+  res.json({ ok: true, old: current.price, new: price, syncStatuses });
 });
 
 // Audit log
@@ -242,6 +271,70 @@ app.post('/api/homefiniti/sync/:planId', auth, (req, res) => {
   });
   
   res.json({ ok: true, message: `Sync started for ${plan.name}`, syncLogId });
+});
+
+// ANewGo sync status
+app.get('/api/anewgo/plan-status', auth, (req, res) => {
+  const statuses = db.prepare(`
+    SELECT plan_name, plan_id, status, new_price, error_message, completed_at, created_at
+    FROM anewgo_sync_log
+    WHERE id IN (SELECT MAX(id) FROM anewgo_sync_log GROUP BY plan_name)
+    ORDER BY created_at DESC
+  `).all();
+  res.json(statuses);
+});
+
+app.post('/api/anewgo/sync/:planId', auth, (req, res) => {
+  const plan = db.prepare('SELECT * FROM plans WHERE id = ?').get(req.params.planId);
+  if (!plan) return res.status(404).json({ error: 'Plan not found' });
+  if (!getAnewgoPlanId(plan.name)) return res.status(400).json({ error: `Plan "${plan.name}" not mapped to ANewGo` });
+
+  const syncLog = db.prepare(
+    'INSERT INTO anewgo_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+  const syncLogId = syncLog.lastInsertRowid;
+
+  updateAnewgoPrice(plan.name, plan.base_price).then(result => {
+    db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+  }).catch(err => {
+    db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run('failed', err.message, syncLogId);
+  });
+
+  res.json({ ok: true, message: `ANewGo sync started for ${plan.name}`, syncLogId });
+});
+
+// Zillow/NHF sync status
+app.get('/api/zillow/plan-status', auth, (req, res) => {
+  const statuses = db.prepare(`
+    SELECT plan_name, plan_id, status, new_price, error_message, completed_at, created_at
+    FROM zillow_sync_log
+    WHERE id IN (SELECT MAX(id) FROM zillow_sync_log GROUP BY plan_name)
+    ORDER BY created_at DESC
+  `).all();
+  res.json(statuses);
+});
+
+app.post('/api/zillow/sync/:planId', auth, (req, res) => {
+  const plan = db.prepare('SELECT * FROM plans WHERE id = ?').get(req.params.planId);
+  if (!plan) return res.status(404).json({ error: 'Plan not found' });
+  if (!getZillowPlanId(plan.name)) return res.status(400).json({ error: `Plan "${plan.name}" not mapped to Zillow` });
+
+  const syncLog = db.prepare(
+    'INSERT INTO zillow_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+  const syncLogId = syncLog.lastInsertRowid;
+
+  updateZillowPrice(plan.name, plan.base_price).then(result => {
+    db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+  }).catch(err => {
+    db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run('failed', err.message, syncLogId);
+  });
+
+  res.json({ ok: true, message: `Zillow sync started for ${plan.name}`, syncLogId });
 });
 
 // PDF generation
