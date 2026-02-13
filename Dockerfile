@@ -1,7 +1,9 @@
 FROM node:20-slim
 
-# Install Chromium dependencies for Puppeteer
+# Install build tools for native modules + Chromium dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
+  build-essential \
+  python3 \
   ca-certificates \
   fonts-liberation \
   libasound2 \
@@ -25,11 +27,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --build-from-source
 COPY . .
 
 # Create db directory
 RUN mkdir -p db
 
+ENV PORT=3000
 EXPOSE 3000
 CMD ["node", "server.js"]
