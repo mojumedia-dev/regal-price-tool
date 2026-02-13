@@ -154,13 +154,13 @@
     </div>
     
     <div class="tabs">
-      <div class="tab active" onclick="switchTab('homesites')">🏡 Homesites</div>
-      <div class="tab" onclick="switchTab('base-prices')">💰 Base Prices</div>
+      <div class="tab" onclick="switchTab('homesites')">🏡 Homesites</div>
+      <div class="tab active" onclick="switchTab('base-prices')">💰 Base Prices</div>
       <div class="tab" onclick="switchTab('available-homes')">🏠 Available Homes</div>
     </div>
     
-    <div class="tab-content active" id="tab-homesites"></div>
-    <div class="tab-content" id="tab-base-prices"></div>
+    <div class="tab-content" id="tab-homesites"></div>
+    <div class="tab-content active" id="tab-base-prices"></div>
     <div class="tab-content" id="tab-available-homes"></div>
   </div>
 </div>
@@ -180,7 +180,7 @@
 const API = '';
 let currentUser = null;
 let currentCommunity = null;
-let currentTab = 'homesites';
+let currentTab = 'base-prices';
 let pendingChanges = {};
 
 // Auth

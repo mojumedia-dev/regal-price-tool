@@ -138,7 +138,7 @@ const parksidePlans = [
   ['The Chatsworth', 4086, '2,151-4,029', 1, '3-5', '2-3', '2-3', 795000, '199728'],
   ['The Kensington', 4389, '2,825-4,315', 2, '2-6', '3.5-5.5', '3', 897000, '199729'],
 ];
-parksidePlans.forEach((p, i) => { insertPlan.run(planId++, 1, ...p, i+1, p[8] || null); });
+parksidePlans.forEach((p, i) => { const hid = p.pop(); insertPlan.run(planId++, 1, ...p, i+1, hid || null); });
 
 // Bella Vita (community_id=2)
 const bellaVitaPlans = [
