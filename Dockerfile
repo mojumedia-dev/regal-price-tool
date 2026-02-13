@@ -26,8 +26,9 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --build-from-source
+COPY package.json ./
+RUN npm install --ignore-scripts
+RUN npm rebuild better-sqlite3 --build-from-source
 COPY . .
 
 # Create db directory
