@@ -266,7 +266,7 @@ app.post('/api/communities/:id/generate-pdf/:type', auth, async (req, res) => {
 
     const outputDir = path.join(__dirname, 'generated-pdfs', community.slug);
     fs.mkdirSync(outputDir, { recursive: true });
-    const filename = `${pdfType}-${new Date().toISOString().slice(0,10)}.pdf`;
+    const filename = `${community.name}-${pdfType}-${new Date().toISOString().slice(0,10)}.pdf`;
     const outputPath = path.join(outputDir, filename);
 
     await generatePDF(pdfType, community, data, outputPath);
@@ -283,7 +283,7 @@ app.get('/api/communities/:id/download-pdf/:type', auth, async (req, res) => {
   const community = db.prepare('SELECT * FROM communities WHERE id = ?').get(req.params.id);
   if (!community) return res.status(404).json({ error: 'Community not found' });
   const outputDir = path.join(__dirname, 'generated-pdfs', community.slug);
-  const files = fs.existsSync(outputDir) ? fs.readdirSync(outputDir).filter(f => f.startsWith(req.params.type)).sort().reverse() : [];
+  const files = fs.existsSync(outputDir) ? fs.readdirSync(outputDir).filter(f => f.includes(req.params.type)).sort().reverse() : [];
   if (!files.length) return res.status(404).json({ error: 'No PDF found. Generate one first.' });
   res.download(path.join(outputDir, files[0]));
 });
