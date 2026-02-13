@@ -1,8 +1,9 @@
-const Database = require('better-sqlite3');
+const Database = require('./db-wrapper');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 
-const db = new Database(path.join(__dirname, 'db', 'regal.db'));
+// When required from server.js, Database.init() has already been called
+const db = new Database(path.join(process.env.DB_DIR || path.join(__dirname, 'db'), 'regal.db'));
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 

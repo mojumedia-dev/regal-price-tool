@@ -1,5 +1,5 @@
 const express = require('express');
-const Database = require('better-sqlite3');
+const Database = require('./db-wrapper');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
@@ -14,60 +14,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
 
-// DB - auto-seed if not exists
+// DB - initialized in startServer()
+let db;
 const dbDir = process.env.DB_DIR || path.join(__dirname, 'db');
 if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 const dbPath = path.join(dbDir, 'regal.db');
-const needsSeed = !fs.existsSync(dbPath);
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-if (needsSeed) {
-  console.log('🌱 First run - seeding database...');
-  require('./seed');
-  console.log('✅ Database seeded');
-}
-
-// Run migrations
-try { require('./migrate-2026-02-13')(db); } catch(e) { console.error('Migration error:', e.message); }
-
-// Create sync log tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS homefiniti_sync_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    plan_name TEXT NOT NULL,
-    plan_id INTEGER,
-    old_price INTEGER,
-    new_price INTEGER,
-    status TEXT NOT NULL DEFAULT 'pending',
-    error_message TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    completed_at DATETIME
-  );
-  CREATE TABLE IF NOT EXISTS anewgo_sync_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    plan_name TEXT NOT NULL,
-    plan_id INTEGER,
-    old_price INTEGER,
-    new_price INTEGER,
-    status TEXT NOT NULL DEFAULT 'pending',
-    error_message TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    completed_at DATETIME
-  );
-  CREATE TABLE IF NOT EXISTS zillow_sync_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    plan_name TEXT NOT NULL,
-    plan_id INTEGER,
-    old_price INTEGER,
-    new_price INTEGER,
-    status TEXT NOT NULL DEFAULT 'pending',
-    error_message TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    completed_at DATETIME
-  );
-`);
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -384,4 +335,64 @@ app.get('/api/communities/:id/download-pdf/:type', auth, async (req, res) => {
   res.download(path.join(outputDir, files[0]));
 });
 
-app.listen(PORT, () => console.log(`🏠 Regal Homes Price Tool running on http://localhost:${PORT}`));
+async function startServer() {
+  await Database.init();
+  
+  const needsSeed = !fs.existsSync(dbPath);
+  db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  
+  if (needsSeed) {
+    console.log('🌱 First run - seeding database...');
+    // Seed inline since seed.js creates its own db connection
+    require('./seed');
+    console.log('✅ Database seeded');
+    // Reload db after seed
+    db = new Database(dbPath);
+  }
+  
+  // Run migrations
+  try { require('./migrate-2026-02-13')(db); } catch(e) { console.error('Migration error:', e.message); }
+
+  // Create sync log tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS homefiniti_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plan_name TEXT NOT NULL,
+      plan_id INTEGER,
+      old_price INTEGER,
+      new_price INTEGER,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error_message TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at DATETIME
+    );
+    CREATE TABLE IF NOT EXISTS anewgo_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plan_name TEXT NOT NULL,
+      plan_id INTEGER,
+      old_price INTEGER,
+      new_price INTEGER,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error_message TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at DATETIME
+    );
+    CREATE TABLE IF NOT EXISTS zillow_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plan_name TEXT NOT NULL,
+      plan_id INTEGER,
+      old_price INTEGER,
+      new_price INTEGER,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error_message TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at DATETIME
+    );
+  `);
+
+  app.listen(PORT, () => console.log(`🏠 Regal Homes Price Tool running on http://localhost:${PORT}`));
+}
+
+startServer().catch(e => { console.error('Failed to start:', e); process.exit(1); });
