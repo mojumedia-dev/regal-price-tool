@@ -114,9 +114,9 @@ db.prepare(`INSERT OR REPLACE INTO users (id, email, password_hash, name, role) 
 const insertComm = db.prepare(`INSERT OR REPLACE INTO communities (id, name, slug, phone, website, sales_office_address, sales_office_city, sales_office_hours, sales_manager_name, sales_manager_phone, sales_manager_email, homefiniti_location_id) VALUES (?, ?, ?, ?, 'REGALUT.COM', ?, ?, ?, ?, ?, ?, ?)`);
 
 insertComm.run(1, 'Parkside', 'parkside', '385-446-5524', '2458 W Aurora Ave', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com', '14565');
-insertComm.run(2, 'Bella Vita', 'bella-vita', '385-481-3475', '526 North Legend Way', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Marissa Burdett', '385-481-3475', 'marissa@regalut.com', '14559');
-insertComm.run(3, 'Bristol Farms', 'bristol-farms', '385-481-3475', '1722 S 4300 W St', 'WEST WEBER, UT 84401', 'Monday - Saturday  11am - 5pm', 'Marissa Burdett', '385-481-3475', 'marissa@regalut.com', '15250');
-insertComm.run(4, 'Amanti Lago', 'amanti-lago', '(385) 481-3475', '11252 N Regal Ridge Court', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Marissa Burdett', '(385) 481-3475', 'marissa@regalut.com', '14558');
+insertComm.run(2, 'Bella Vita', 'bella-vita', '801-598-4949', '526 N Legend Way', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Gary Hansen', '801-598-4949', 'Gary.H@RegalUT.com', '14559');
+insertComm.run(3, 'Bristol Farms', 'bristol-farms', '385-503-5375', '1722 S 4300 W', 'OGDEN, UT 84401', 'Monday - Saturday  11am - 5pm', 'Tristan Hamblin', '385-310-6871', 'tristan@regalut.com', '15250');
+insertComm.run(4, 'Amanti Lago', 'amanti-lago', '385-481-5139', '1757 W Amanti Lago Court', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Gina McBride', '801-688-2279', 'gina@regalut.com', '14558');
 insertComm.run(5, 'Windflower', 'windflower', '385-481-3475', '1901 S Sawmill Blvd', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Marissa Burdett', '385-481-3475', 'marissa@regalut.com', '14566');
 
 // Assign all communities to users
@@ -140,44 +140,45 @@ const parksidePlans = [
 ];
 parksidePlans.forEach((p, i) => { const hid = p.pop(); insertPlan.run(planId++, 1, ...p, i+1, hid || null); });
 
-// Bella Vita (community_id=2)
+// Bella Vita (community_id=2) — Updated from PDF 02.05.26
+// Carriage Homes
 const bellaVitaPlans = [
-  ['Adelaide', 2392, '1,894-2,392', 1, '2-3', '2-3', '2', 614000, '178533'],
-  ['Alberto', 2449, '1,923-2,449', 1, '2-3', '2-3', '2', 628000, '178534'],
-  ['Alfonso', 2341, '1,829-2,341', 1, '2-3', '2-3', '2', 610000, '178535'],
-  ['Amelia', 2265, '1,753-2,265', 1, '2-3', '2-3', '2', 610000, '178536'],
-  ['Bianca', 4987, '2,094-4,987', 1, '2-7', '2-4', '2', 725000, '178538'],
-  ['Charles', 3916, '2,058-3,916', 1, '3-6', '2-3', '2', 722000, '178657'],
-  ['Clifton', 1854, '1,854', 1, '2', '2', '2', 669000, '231084'],
-  ['Francesca', 3358, '1,766-3,358', 1, '2-4', '2-3', '2', 615000, '178658'],
-  ['Isabella', 4262, '1,836-4,262', 1, '2-6', '2-4', '2', 634000, '178660'],
+  ['Amelia (Carriage)', 1753, '1,753', 1, '2', '2-3', '2', 595000, '178536'],
+  ['Alfonso (Carriage)', 1829, '1,829', 1, '2', '2-3', '2', 595000, '178535'],
+  ['Adelaide (Carriage)', 1903, '1,903', 1, '2', '2-3', '2', 599000, '178533'],
+  ['Alberto (Carriage)', 1960, '1,960', 1, '2', '2-3', '2', 613000, '178534'],
+  ['Francesca', 1766, '1,592-1,766', 1, '2-4', '2-3', '2', 629000, '178658'],
+  ['Isabella', 1836, '1,707-1,836', 1, '2-5', '2-4', '2', 652000, '178660'],
+  ['Clifton', 1861, '1,656-1,861', 1, '2-4', '2-3', '2-3', 650000, '231084'],
+  ['Charles', 2058, '1,858-2,058', 1, '2-6', '2-3', '2', 699000, '178657'],
+  ['Bianca', 2094, '1,864-2,094', 1, '2-6', '2-4', '2', 699000, '178538'],
 ];
 bellaVitaPlans.forEach((p, i) => { insertPlan.run(planId++, 2, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], i+1, p[8]); });
 
-// Bristol Farms (community_id=3)
+// Bristol Farms (community_id=3) — Updated from PDF 02.05.26
 const bristolPlans = [
-  ['Ashton', 1633, '1,633', 1, '3', '2', '2', 595000, '207053'],
-  ['Ashton B (Basement)', 3247, '1,633-3,247', 1, '3', '2', '2', 665000, '236420'],
+  ['Ashton', 1633, '1,633', 1, '3', '2', '2-3', 595000, '207053'],
+  ['Ashton B (Basement)', 3279, '1,717-3,279', 1, '3-5', '2-3', '2-3', 665000, '236420'],
   ['Corbridge', 1854, '1,854', 1, '2', '2', '2-3', 623000, '207054'],
-  ['Corbridge B (Basement)', 3579, '1,854-3,579', 1, '2-4', '2', '2-3', 685000, '237768'],
-  ['Cotham', 2554, '2,554', 2, '3', '2.5', '3', 667000, '207055'],
-  ['Cotham B (Basement)', 4024, '2,554-4,024', 2, '3-5', '2.5', '3', 727000, '237769'],
-  ['Easton', 2145, '2,145', 2, '3-4', '2.5', '2-3', 639000, '207056'],
-  ['Easton B (Basement)', 3348, '2,145-3,348', 2, '3-4', '2.5', '2-3', 690000, '237770'],
-  ['Rosewood', 2132, '2,132', 2, '3-4', '2.5', '2-3', 635000, '207057'],
-  ['Rosewood B (Basement)', 3320, '2,132-3,320', 2, '3-4', '2.5', '2-3', 699000, '237772'],
+  ['Corbridge B (Basement)', 3622, '1,923-3,622', 1, '2-4', '2-3', '2-3', 685000, '237768'],
+  ['Cotham', 2554, '2,554', 2, '3', '2.5', '2-3', 667000, '207055'],
+  ['Cotham B (Basement)', 4024, '2,659-4,024', 2, '3-5', '2.5-3.5', '2-3', 727000, '237769'],
+  ['Easton', 2166, '2,166', 2, '3', '2.5', '2-3', 639000, '207056'],
+  ['Easton B (Basement)', 3394, '2,304-3,394', 2, '3-5', '2.5-3.5', '2-3', 690000, '237770'],
+  ['Rosewood', 2085, '2,085', 2, '4', '2.5', '2-3', 635000, '207057'],
+  ['Rosewood B (Basement)', 3224, '2,283-3,224', 2, '4-5', '2.5-3.5', '2-3', 699000, '237772'],
   ['Westbury', 2151, '2,151', 1, '3', '2', '2-3', 659000, '207058'],
-  ['Westbury B (Basement)', 3324, '2,151-3,324', 1, '3-5', '2', '2-3', 739000, '237773'],
+  ['Westbury B (Basement)', 4137, '2,158-4,137', 1, '3-5', '2-3', '2-3', 739000, '237773'],
   ['Windsor B (Basement)', 3975, '2,010-3,975', 1, '3-6', '2-3', '2-3', null, '240969'],
 ];
 bristolPlans.forEach((p, i) => { insertPlan.run(planId++, 3, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], i+1, p[8]); });
 
-// Amanti Lago (community_id=4)
+// Amanti Lago (community_id=4) — Updated from PDF 02.05.26
 const amantiPlans = [
-  ['Sophia Mountain Modern', 3570, '3,570', 1, '4', '4', '2', 4150000, '187701'],
-  ['Sophia Mountain Traditional', 3570, '3,570', 1, '4', '4', '2', 3999000, '178271'],
-  ['Valentino Mountain Modern', 4434, '4,434', 1, '4', '4.5', '2', 4300000, '187700'],
-  ['Valentino Mountain Traditional', 4434, '4,434', 1, '4', '4.5', '2', 4200000, '178272'],
+  ['The Sophia Mountain Traditional', 3570, '3,570', 1, '4', '4', '2', 3999000, '178271'],
+  ['The Sophia Mountain Modern', 3570, '3,570', 1, '4', '4', '2', 4150000, '187701'],
+  ['The Valentino Mountain Traditional', 3849, '3,849', 1, '4+Den', '4.5', '2', 4200000, '178272'],
+  ['The Valentino Mountain Modern', 3849, '3,849', 1, '4+Den', '4.5', '2', 4300000, '187700'],
 ];
 amantiPlans.forEach((p, i) => { insertPlan.run(planId++, 4, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], i+1, p[8]); });
 
@@ -196,22 +197,123 @@ const windflowerPlans = [
 ];
 windflowerPlans.forEach((p, i) => { insertPlan.run(planId++, 5, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], i+1, p[8]); });
 
-// ===== PARKSIDE HOMESITES =====
-const insertLot = db.prepare(`INSERT OR REPLACE INTO homesites (id, community_id, lot_number, address, front_facing_direction, sqft, premium_price, sort_order) VALUES (?, 1, ?, ?, ?, ?, ?, ?)`);
-const lots = [
-  [1, '290', '2485 W Aurora Ave', 'NW', 9643, 56000, 1],
-  [2, '291', '2511W Aurora Ave', 'NW', 9302, 54000, 2],
-  [3, '292', '2539 W Aurora Ave', 'NW', 9629, 55000, 3],
-  [4, '293', '2559 W Aurora Ave', 'NW', 9866, 56000, 4],
-  [5, '294', '2567 W Aurora Ave', 'NW', 9827, 58000, 5],
-  [6, '295', '2579 W Aurora Ave', 'NW', 9766, 60000, 6],
-  [7, '308', '192 S Crimson Way', 'SE or NE', 9180, 42000, 7],
-  [8, '309', '2576 W Aurora Ave', 'SE', 7301, 38000, 8],
-  [9, '311', '143 S Crimson Way', 'W', 6998, 36000, 9],
-  [10, '312', '165 Crimson Way', 'W', 7188, 37000, 10],
-  [11, '313', '187 S Crimson Way', 'W or SE', 9892, 47000, 11],
+// ===== HOMESITES (ALL COMMUNITIES) =====
+const insertLot = db.prepare(`INSERT OR REPLACE INTO homesites (id, community_id, lot_number, address, front_facing_direction, sqft, premium_price, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+let lotId = 1;
+
+// Parkside (community_id=1)
+const parksideLots = [
+  ['290', '2485 W Aurora Ave', 'NW', 9643, 56000],
+  ['291', '2511 W Aurora Ave', 'NW', 9302, 54000],
+  ['292', '2539 W Aurora Ave', 'NW', 9629, 55000],
+  ['293', '2559 W Aurora Ave', 'NW', 9866, 56000],
+  ['294', '2567 W Aurora Ave', 'NW', 9827, 58000],
+  ['295', '2579 W Aurora Ave', 'NW', 9766, 60000],
+  ['308', '192 S Crimson Way', 'SE or NE', 9180, 42000],
+  ['309', '2576 W Aurora Ave', 'SE', 7301, 38000],
+  ['311', '143 S Crimson Way', 'W', 6998, 36000],
+  ['312', '165 Crimson Way', 'W', 7188, 37000],
+  ['313', '187 S Crimson Way', 'W or SE', 9892, 47000],
 ];
-lots.forEach(l => insertLot.run(...l));
+parksideLots.forEach((l, i) => { insertLot.run(lotId++, 1, ...l, i+1); });
+
+// Bella Vita (community_id=2) — From PDF 01.21.26
+const bellaVitaLots = [
+  ['449', null, 'NW', null, 29400],
+  ['450', null, 'NW', null, 29400],
+  ['452', null, 'NW', null, 29400],
+  ['453', null, 'N', null, 29400],
+  ['454', null, 'N', null, 27900],
+  ['455', null, 'N', null, 26400],
+  ['476', null, 'W', null, 24900],
+  ['488', null, 'NE', null, 24900],
+  ['491', null, 'NE', null, 27900],
+  ['492', null, 'NE', null, 27900],
+  ['493', null, 'SW', null, 117900],
+  ['494', null, 'SW', null, 117900],
+  ['495', null, 'SW', null, 117900],
+  ['496', null, 'SW', null, 117900],
+  ['506', null, 'W', null, 24900],
+  ['507', null, 'SW', null, 36900],
+  ['508', null, 'W', null, 27900],
+  ['509', null, 'W', null, 26400],
+  ['518', null, 'E', null, 97900],
+  ['519', null, 'E', null, 97900],
+  ['520', null, 'NE', null, 24900],
+];
+bellaVitaLots.forEach((l, i) => { insertLot.run(lotId++, 2, ...l, i+1); });
+
+// Bristol Farms (community_id=3) — From PDF 01.22.25
+const bristolLots = [
+  ['101', null, null, 17525, 21750],
+  ['102', null, null, 14266, 14875],
+  ['103', null, null, 14426, 14875],
+  ['203', null, null, 14426, 14875],
+  ['204', null, null, 14334, 14875],
+  ['205', null, null, 10621, 13000],
+  ['206', null, null, 10623, 13000],
+  ['207', null, null, 10623, 13000],
+  ['208', null, null, 10623, 13000],
+  ['209', null, null, 10623, 13000],
+  ['210', null, null, 10623, 13000],
+  ['211', null, null, 10669, 13000],
+  ['212', null, null, 10561, 17375],
+  ['213', null, null, 10623, 17375],
+  ['214', null, null, 10623, 17375],
+  ['215', null, null, 10623, 17375],
+  ['216', null, null, 10623, 17375],
+  ['217', null, null, 10623, 17375],
+  ['218', null, null, 10626, 17375],
+  ['219', null, null, 10611, 14875],
+  ['220', null, null, 10561, 14250],
+  ['221', null, null, 10512, 14875],
+  ['222', null, null, 12719, 14875],
+  ['223', null, null, 12517, 14875],
+  ['224', null, null, 12616, 15500],
+  ['225', null, null, 10453, 14875],
+  ['226', null, null, 10403, 14250],
+  ['227', null, null, 10777, 18000],
+  ['228', null, null, 10057, 15500],
+  ['229', null, null, 10057, 15500],
+  ['230', null, null, 10938, 18000],
+  ['231', null, null, 10057, 15500],
+  ['232', null, null, 10057, 16125],
+  ['233', null, null, 10057, 16125],
+];
+bristolLots.forEach((l, i) => { insertLot.run(lotId++, 3, ...l, i+1); });
+
+// Amanti Lago (community_id=4) — From PDF 08.28.25
+const amantiLots = [
+  ['1', '11513 N Regal Ridge Court', null, 7421, 167500],
+  ['2', '11493 N Regal Ridge Court', null, 8122, 187500],
+  ['3', '11467 N Regal Ridge Court', null, 7611, 167500],
+  ['4', '11449 N Regal Ridge Court', null, 7607, 195000],
+  ['5', '11427 N Regal Ridge Court', null, 7632, 195000],
+  ['6', '11409 N Regal Ridge Court', null, 8045, 235000],
+  ['7', '11378 N Regal Ridge Court', null, 10686, 155000],
+  ['8', '11366 N Regal Ridge Court', null, 8925, 215000],
+  ['9', '11346 N Regal Ridge Court', null, 9847, 227500],
+  ['10', '11334 N Regal Ridge Court', null, 9363, 440000],
+  ['11', '11316 N Regal Ridge Court', null, 8324, 395000],
+  ['12', '11296 N Regal Ridge Court', null, 10449, 330000],
+  ['13', '11278 N Regal Ridge Court', null, 10025, 290000],
+  ['14', '11252 N Regal Ridge Court', null, 9303, 250000],
+  ['15', '1685 W Crystal View Court', null, 11361, 205000],
+  ['16', '1665 W Crystal View Court', null, 9367, 195000],
+  ['17', '1651 W Crystal View Court', null, 9448, 215000],
+  ['18', '1641 W Crystal View Court', null, 10416, 225000],
+  ['19', '1631 W Crystal View Court', null, 10202, 265000],
+  ['20', '1617 W Crystal View Court', null, 9340, 265000],
+  ['21', '1601 W Crystal View Court', null, 8648, 255000],
+  ['22', '1587 W Crystal View Court', null, 8359, 265000],
+  ['23', '1573 W Crystal View Court', null, 7707, 245000],
+  ['24', '1561 W Crystal View Court', null, 8180, 255000],
+  ['25', '1547 W Crystal View Court', null, 10851, 285000],
+  ['26', '1525 W Crystal View Court', null, 9524, 267500],
+  ['27', '1757 W Amanti Lago Court', null, 50752, 638500],
+  ['28', '1752 W Amanti Lago Court', null, 29144, 438500],
+];
+amantiLots.forEach((l, i) => { insertLot.run(lotId++, 4, ...l, i+1); });
 
 // ===== PARKSIDE AVAILABLE HOMES =====
 const insertHome = db.prepare(`INSERT OR REPLACE INTO available_homes (id, community_id, plan_name, address, total_sqft, finished_sqft, beds, baths, garage, est_move_in, price, sort_order, homefiniti_spec_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
@@ -231,40 +333,51 @@ const parksideHomes = [
 ];
 parksideHomes.forEach((h, i) => { insertHome.run(homeId++, 1, ...h, i+1, null); });
 
-// Bella Vita (community_id=2)
+// Bella Vita (community_id=2) — Updated from QMI PDF 02.04.26
 const bellaVitaHomes = [
-  ['Clifton', '2140 West Legend Way (#490)', 3517, 3517, 4, 3, 2, 'Move in Ready', 889000],
-  ['Isabella', '2177 W Fortune Lane (#451)', 3541, 3541, 5, 4, 2, 'February 2026', 760000],
-  ['Alfonso', '549B N Legend Way (#467)', 2341, 1829, 2, 2, 2, 'Move in Ready', 629000],
-  ['Alfonso', '567 A North Legend Way (#468)', 2341, 1829, 2, 2, 2, 'April 2026', 629000],
-  ['Alfonso', '567 B North Legend Way (#471)', 2341, 1829, 2, 2, 2, 'Move in Ready', 645000],
-  ['Amelia', '567 C North Legend Way (#470)', 2281, 2281, 3, 3, 2, 'April 2026', 695000],
-  ['Amelia', '567 D North Legend Way (#469)', 2281, 2281, 3, 3, 2, 'February 2026', 685000],
-  ['Bianca', '622 N Legend Cir (#481)', 4037, 4037, 5, 3, 2, 'Move in Ready', 970000],
-  ['Clifton', '624 N Legend Cir (#480)', 3517, 3517, 4, 3, 2, 'Move in Ready', 885000],
-  ['Bianca', '626 N Legend Cir (#479)', 4037, 4037, 5, 3, 2, 'Move in Ready', 870000],
-  ['Isabella', '2239 West Fortune Lane (#447)', 4375, 4375, 5, 4, 2, 'Move in Ready', 795000],
+  ['Alfonso', '549B N Legend (#467)', 1829, 1829, 2, 2, 2, 'Move in Ready', 629000],
+  ['Alfonso', '567A N Legend (#468)', 1829, 1829, 2, 2, 2, 'Move in Ready', 629000],
+  ['Alfonso', '567B N Legend (#471)', 1829, 1829, 2, 2, 2, 'Move in Ready', 645000],
+  ['Amelia', '567D N Legend (#469)', 2281, 2281, 2, 2, 2, 'Under Construction', 685000],
+  ['Amelia', '567C N Legend (#470)', 2281, 2281, 2, 2, 2, 'Under Construction', 695000],
+  ['Bianca', '622 N Legend Cir (#481)', 4037, 3825, 5, 2, 3, 'Move in Ready', 970000],
+  ['Bianca', '626 N Legend Cir (#479)', 4037, 3825, 5, 2, 3, 'Move in Ready', 870000],
+  ['Bianca', '2152 W Legend Way (#489)', 3961, 2092, 2, 2, 2, 'Under Construction', 820000],
+  ['Clifton', '624 N Legend Way (#480)', 3517, 3030, 4, 2, 3, 'Move in Ready', 885000],
+  ['Clifton', '2140 W Legend Way (#490)', 3517, 3030, 2, 2, 3, 'Under Construction', 889000],
+  ['Clifton', '538 N Legend Way (#505)', 3517, 3361, 3, 2, 3, 'Under Construction', 889000],
+  ['Isabella', '2177 W Fortune Ln (#451)', 3541, 1932, 2, 2, 2, 'Under Construction', 760000],
+  ['Isabella', '2227 W Fortune Ln (#448)', 3541, 3257, 5, 2, 3, 'Under Construction', 815000],
 ];
 bellaVitaHomes.forEach((h, i) => { insertHome.run(homeId++, 2, ...h, i+1, null); });
 
-// Bristol Farms (community_id=3)
+// Bristol Farms (community_id=3) — Updated from QMI PDF 02.12.26
 const bristolHomes = [
-  ['Cotham', '1624 S 4350 W (#216)', 2517, 2517, 3, 2.5, 3, 'Move in Ready', 702000],
-  ['Westbury', '1650 S 4350 W (#218)', 2151, 2151, 3, 2, 2, 'Move in Ready', 706000],
-  ['Easton', '1612 S 4350 W (#215)', 2166, 2166, 3, 2.5, 3, 'Move in Ready', 662000],
-  ['Corbridge', '1636 S 4350 W (#217)', 1855, 1855, 2, 2, 3, 'Move in Ready', 626000],
-  ['Cotham (Model)', '1722 S 4300 W (#103)', 2554, 2554, 3, 2.5, 3, 'Move in Ready', 850000],
   ['Easton', '1732 S 4300 W (#102)', 2145, 2145, 3, 2.5, 3, 'Move in Ready', 625000],
+  ['Cotham', '1722 S 4300 W (#103)', 2554, 2554, 3, 3.5, 4, 'Move in Ready', 850000],
+  ['Easton', '1612 S 4350 W (#215)', 2166, 2166, 3, 2.5, 3, 'Move in Ready', 662000],
+  ['Cotham', '1624 S 4350 W (#216)', 2517, 2517, 3, 2.5, 3, 'Move in Ready', 702000],
+  ['Corbridge', '1636 S 4350 W (#217)', 1855, 1855, 3, 2, 2, 'Move in Ready', 626000],
+  ['Westbury', '1650 S 4350 W (#218)', 2151, 2151, 2, 3, 2, 'Move in Ready', 706000],
+  ['Corbridge B', '1664 S 4350 W (#219)', 3737, 1923, 3, 2, 2, 'July', 785000],
+  ['Easton B', '1637 S 4350 W (#231)', 3460, 2304, 5, 3, 2, 'June', 790000],
+  ['Rosewood B', '1625 S 4350 W (#232)', 3256, 2358, 4, 2.5, 3, 'June', 799000],
+  ['Easton B', '1613 S 4350 W (#233)', 3460, 3307, 5, 3, 2, 'June', 839000],
 ];
 bristolHomes.forEach((h, i) => { insertHome.run(homeId++, 3, ...h, i+1, null); });
 
-// Amanti Lago (community_id=4)
+// Amanti Lago (community_id=4) — Updated from QMI PDF 02.05.26
 const amantiHomes = [
-  ['Sophia Mountain Traditional (Model)', '11252 N Regal Ridge Court (#14)', 3570, 3570, 4, 4, 2, 'Move in Ready', 4600000],
-  ['Sophia Mountain Modern', '11378 N Regal Ridge Cr (#7)', 3570, 3570, 4, 4, 2, 'February 2026', 4650000],
-  ['Valentino Mountain Modern', '11409 N Regal Ridge Ct (#6)', 4434, 4434, 4, 4.5, 2, 'Move in Ready', 4500000],
-  ['Sophia Mountain Modern', '1561 W. Crystal View Ct. (#24)', 3570, 3570, 4, 4, 2, 'Move in Ready', 4700000],
-  ['Sophia Mountain Traditional', '1573 W Crystal View Ct (#23)', 3570, 3570, 4, 4, 2, 'Move in Ready', 4800000],
+  ['Valentino M', '1641 W Crystal View Ct (#18)', 3849, 3849, 4, 4.5, 2, 'January', 3999000],
+  ['Valentino M', '1587 W Crystal View Ct (#22)', 3849, 3849, 4, 4.5, 2, 'February', 3930000],
+  ['Sophia M', '1573 W Crystal View Ct (#23)', 3570, 3570, 4, 4, 2, 'February', 4800000],
+  ['Sophia T', '1561 W Crystal View Ct (#24)', 3570, 3570, 4, 4, 2, 'February', 4700000],
+  ['Sophia T', '11252 N Regal Ridge Ct (#14)', 3570, 3570, 4, 4, 2, 'Model Home Leaseback', 4600000],
+  ['Valentino M', '11409 N Regal Ridge Ct (#6)', 3849, 3849, 4, 4.5, 2, 'March', 4500000],
+  ['Sophia M', '11378 N Regal Ridge Ct (#7)', 3570, 3570, 4, 4, 2, 'April', 4650000],
+  ['Valentino T', '11366 N Regal Ridge Ct (#8)', 3849, 3849, 4, 4.5, 2, 'February', 4600000],
+  ['Sophia T', '1601 W Crystal View Ct (#21)', 3570, 3570, 4, 4, 2, 'March', 4650000],
+  ['Sophia T', '11467 N Regal Ridge Ct (#3)', 3570, 3570, 4, 4, 2, 'March', 4700000],
 ];
 amantiHomes.forEach((h, i) => { insertHome.run(homeId++, 4, ...h, i+1, null); });
 
@@ -283,6 +396,6 @@ windflowerHomes.forEach((h, i) => { insertHome.run(homeId++, 5, ...h, i+1, null)
 console.log('✅ Database seeded successfully!');
 console.log(`   Communities: 5`);
 console.log(`   Plans: ${planId - 1}`);
-console.log(`   Homesites: ${lots.length}`);
+console.log(`   Homesites: ${lotId - 1}`);
 console.log(`   Available Homes: ${homeId - 1}`);
 db.close();
