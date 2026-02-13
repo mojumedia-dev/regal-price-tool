@@ -28,6 +28,9 @@ if (needsSeed) {
   console.log('✅ Database seeded');
 }
 
+// Run migrations
+try { require('./migrate-2026-02-13')(db); } catch(e) { console.error('Migration error:', e.message); }
+
 // Create sync log tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS homefiniti_sync_log (
