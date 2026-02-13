@@ -106,6 +106,7 @@ app.put('/api/:type/:id/field', auth, (req, res) => {
   );
   
   db.prepare(`UPDATE ${table} SET ${field} = ? WHERE id = ?`).run(value, id);
+  db.save();
   res.json({ ok: true, old: current.val, new: value });
 });
 
@@ -166,6 +167,7 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
     }
   }
   
+  db.save();
   res.json({ ok: true, old: current.price, new: price, syncStatuses });
 });
 
@@ -289,6 +291,94 @@ app.post('/api/zillow/sync/:planId', auth, (req, res) => {
   });
 
   res.json({ ok: true, message: `Zillow sync started for ${plan.name}`, syncLogId });
+});
+
+// Master Sync — push ALL plan prices to ALL platforms
+app.post('/api/master-sync', auth, async (req, res) => {
+  const plans = db.prepare('SELECT p.*, c.name as community_name FROM plans p JOIN communities c ON c.id = p.community_id ORDER BY p.community_id, p.sort_order').all();
+  
+  let syncCount = 0;
+  for (const plan of plans) {
+    if (!plan.base_price) continue;
+    
+    // Homefiniti
+    if (getHomefinitiPlanId(plan.name)) {
+      const log = db.prepare('INSERT INTO homefiniti_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+      const logId = log.lastInsertRowid;
+      updatePlanPrice(plan.name, plan.base_price).then(result => {
+        db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+        db.save();
+      }).catch(err => {
+        db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run('failed', err.message, logId);
+        db.save();
+      });
+      syncCount++;
+    }
+    
+    // ANewGo
+    if (getAnewgoPlanId(plan.name)) {
+      const log = db.prepare('INSERT INTO anewgo_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+      const logId = log.lastInsertRowid;
+      updateAnewgoPrice(plan.name, plan.base_price).then(result => {
+        db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+        db.save();
+      }).catch(err => {
+        db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run('failed', err.message, logId);
+        db.save();
+      });
+      syncCount++;
+    }
+    
+    // Zillow
+    if (getZillowPlanId(plan.name)) {
+      const log = db.prepare('INSERT INTO zillow_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+      const logId = log.lastInsertRowid;
+      updateZillowPrice(plan.name, plan.base_price).then(result => {
+        db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+        db.save();
+      }).catch(err => {
+        db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+          .run('failed', err.message, logId);
+        db.save();
+      });
+      syncCount++;
+    }
+  }
+  
+  db.save();
+  res.json({ ok: true, totalPlans: plans.length, syncOperations: syncCount });
+});
+
+// Master Sync status — get latest sync status per plan across all platforms
+app.get('/api/master-sync/status', auth, (req, res) => {
+  const plans = db.prepare('SELECT id, name FROM plans ORDER BY community_id, sort_order').all();
+  
+  const hfStatuses = {};
+  db.prepare('SELECT plan_id, status FROM homefiniti_sync_log WHERE id IN (SELECT MAX(id) FROM homefiniti_sync_log GROUP BY plan_id)').all()
+    .forEach(s => { hfStatuses[s.plan_id] = s.status; });
+  
+  const anStatuses = {};
+  db.prepare('SELECT plan_id, status FROM anewgo_sync_log WHERE id IN (SELECT MAX(id) FROM anewgo_sync_log GROUP BY plan_id)').all()
+    .forEach(s => { anStatuses[s.plan_id] = s.status; });
+  
+  const zlStatuses = {};
+  db.prepare('SELECT plan_id, status FROM zillow_sync_log WHERE id IN (SELECT MAX(id) FROM zillow_sync_log GROUP BY plan_id)').all()
+    .forEach(s => { zlStatuses[s.plan_id] = s.status; });
+  
+  const result = plans.map(p => ({
+    plan_id: p.id,
+    name: p.name,
+    homefiniti: hfStatuses[p.id] || null,
+    anewgo: anStatuses[p.id] || null,
+    zillow: zlStatuses[p.id] || null,
+  }));
+  
+  res.json(result);
 });
 
 // PDF generation

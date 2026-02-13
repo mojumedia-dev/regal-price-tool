@@ -149,6 +149,7 @@
     </div>
     <div class="topbar-right">
       <span id="userName"></span>
+      <button onclick="masterSync()" id="masterSyncBtn" style="background:#27AE60;">🔄 Master Sync All</button>
       <button onclick="showAuditLog()">📋 Audit Log</button>
       <button onclick="logout()">Sign Out</button>
     </div>
@@ -177,6 +178,19 @@
     <button onclick="document.getElementById('auditModal').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
     <h2 style="font-family:'Playfair Display',serif; color:#6B1D2A; margin-bottom:16px;">Change Audit Log</h2>
     <div id="auditContent"></div>
+  </div>
+</div>
+
+<!-- Master Sync Modal -->
+<div id="masterSyncModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center;">
+  <div style="background:white; border-radius:12px; width:600px; max-height:80vh; overflow-y:auto; padding:32px; position:relative;">
+    <button onclick="document.getElementById('masterSyncModal').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;">&times;</button>
+    <h2 style="font-family:'Playfair Display',serif; color:#6B1D2A; margin-bottom:8px;">🔄 Master Sync — All Platforms</h2>
+    <p style="color:#888; margin-bottom:20px; font-size:14px;">Push all current prices to Homefiniti, ANewGo, and Zillow/NewHomeFeed across all communities.</p>
+    <div id="masterSyncContent"></div>
+    <div style="text-align:center; margin-top:20px;">
+      <button class="btn btn-primary" id="masterSyncStart" onclick="startMasterSync()" style="background:#27AE60; padding: 14px 40px; font-size:16px;">🚀 Sync Everything Now</button>
+    </div>
   </div>
 </div>
 
@@ -542,6 +556,104 @@ function pollPlatformSync(platform, btn) {
       }
     } catch {}
   }, 2000);
+}
+
+// Master Sync
+async function masterSync() {
+  const modal = document.getElementById('masterSyncModal');
+  modal.style.display = 'flex';
+  const content = document.getElementById('masterSyncContent');
+  content.innerHTML = '<p style="color:#888;">Loading plans across all communities...</p>';
+  
+  try {
+    const commRes = await api('/api/communities');
+    const communities = await commRes.json();
+    let allPlans = [];
+    for (const comm of communities) {
+      const planRes = await api(`/api/communities/${comm.id}/plans`);
+      const plans = await planRes.json();
+      plans.forEach(p => allPlans.push({ ...p, communityName: comm.name }));
+    }
+    
+    content.innerHTML = `
+      <table class="audit-table">
+        <thead><tr><th>Community</th><th>Plan</th><th>Price</th><th>Homefiniti</th><th>ANewGo</th><th>Zillow</th></tr></thead>
+        <tbody>${allPlans.map(p => `<tr id="sync-row-${p.id}">
+          <td>${p.communityName}</td>
+          <td>${p.name}</td>
+          <td style="font-weight:600; color:#6B1D2A;">${formatPrice(p.base_price)}</td>
+          <td id="hf-${p.id}"><span class="sync-badge none">Ready</span></td>
+          <td id="an-${p.id}"><span class="sync-badge none">Ready</span></td>
+          <td id="zl-${p.id}"><span class="sync-badge none">Ready</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <p style="margin-top:12px; font-size:13px; color:#888;">Total: ${allPlans.length} plans across ${communities.length} communities</p>`;
+  } catch (err) {
+    content.innerHTML = `<p style="color:#c0392b;">Error loading plans: ${err.message}</p>`;
+  }
+}
+
+async function startMasterSync() {
+  const btn = document.getElementById('masterSyncStart');
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  btn.style.background = '#BDC3C7';
+  
+  try {
+    const res = await api('/api/master-sync', { method: 'POST' });
+    const data = await res.json();
+    if (!data.ok) { toast('Master sync failed: ' + data.error, 'error'); return; }
+    
+    toast(`Master sync started! ${data.totalPlans} plans syncing across 3 platforms...`, 'success');
+    
+    // Poll for results
+    let attempts = 0;
+    const poll = setInterval(async () => {
+      attempts++;
+      if (attempts > 60) { clearInterval(poll); btn.disabled = false; btn.textContent = '🚀 Sync Everything Now'; btn.style.background = '#27AE60'; return; }
+      
+      try {
+        const statusRes = await api('/api/master-sync/status');
+        const status = await statusRes.json();
+        
+        // Update each row
+        status.forEach(s => {
+          const hfEl = document.getElementById(`hf-${s.plan_id}`);
+          const anEl = document.getElementById(`an-${s.plan_id}`);
+          const zlEl = document.getElementById(`zl-${s.plan_id}`);
+          if (hfEl) hfEl.innerHTML = `<span class="sync-badge ${s.homefiniti || 'none'}">${s.homefiniti || '—'}</span>`;
+          if (anEl) anEl.innerHTML = `<span class="sync-badge ${s.anewgo || 'none'}">${s.anewgo || '—'}</span>`;
+          if (zlEl) zlEl.innerHTML = `<span class="sync-badge ${s.zillow || 'none'}">${s.zillow || '—'}</span>`;
+        });
+        
+        const allDone = status.every(s => 
+          (!s.homefiniti || s.homefiniti !== 'pending') && 
+          (!s.anewgo || s.anewgo !== 'pending') && 
+          (!s.zillow || s.zillow !== 'pending')
+        );
+        
+        if (allDone) {
+          clearInterval(poll);
+          btn.disabled = false;
+          btn.textContent = '✅ Sync Complete!';
+          btn.style.background = '#27AE60';
+          setTimeout(() => { btn.textContent = '🚀 Sync Everything Now'; }, 3000);
+          
+          const synced = status.filter(s => s.homefiniti === 'synced' || s.anewgo === 'synced' || s.zillow === 'synced').length;
+          const failed = status.filter(s => s.homefiniti === 'failed' || s.anewgo === 'failed' || s.zillow === 'failed').length;
+          toast(`Master sync done! ${synced} synced, ${failed} failed`, synced > 0 ? 'success' : 'error');
+          
+          // Refresh current tab
+          const cid = document.getElementById('communitySelect').value;
+          loadBasePrices(cid);
+        }
+      } catch {}
+    }, 2000);
+  } catch (err) {
+    toast('Master sync error: ' + err.message, 'error');
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = '🚀 Sync Everything Now'; btn.style.background = '#27AE60'; }, 60000);
+  }
 }
 
 function toast(msg, type = 'info') {
