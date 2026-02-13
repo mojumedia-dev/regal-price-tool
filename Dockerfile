@@ -34,6 +34,8 @@ COPY . .
 # Create db directory
 RUN mkdir -p db
 
+RUN chmod +x start.sh
+
 ENV PORT=3000
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["./start.sh"]
