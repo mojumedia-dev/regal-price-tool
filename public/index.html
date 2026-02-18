@@ -121,6 +121,46 @@
     .btn-sync.zillow:hover { background: #0055CC; }
     .sync-cell { text-align: center; min-width: 80px; }
     .sync-cell .sync-badge { display: block; margin-bottom: 2px; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .container { padding: 16px; }
+      .topbar { padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+      .topbar h1 { font-size: 17px; }
+      .topbar-right { flex-wrap: wrap; gap: 8px; font-size: 12px; }
+      .topbar-right button { padding: 6px 12px; font-size: 12px; }
+      .community-selector select { min-width: 100%; font-size: 16px; }
+      .tab { padding: 10px 14px; font-size: 12px; }
+      .tab-content { padding: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .data-table { min-width: 700px; }
+      .data-table th, .data-table td { padding: 8px 6px; font-size: 12px; }
+      .price-input { width: 100px; font-size: 13px; }
+      .field-input.short { width: 55px; }
+      .actions { flex-direction: column; gap: 12px; align-items: stretch; }
+      .pdf-actions { justify-content: center; }
+      .btn { padding: 10px 16px; font-size: 13px; justify-content: center; }
+      .sync-cell { min-width: 60px; }
+      .btn-sync { padding: 3px 6px; font-size: 10px; }
+      /* Modals */
+      #auditModal > div, #masterSyncModal > div { width: 95vw !important; padding: 20px !important; }
+    }
+
+    @media (max-width: 600px) {
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .topbar-left { width: 100%; }
+      .topbar-right { width: 100%; justify-content: flex-start; }
+      .topbar img { width: 36px; }
+      .topbar h1 { font-size: 15px; }
+      .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab { white-space: nowrap; padding: 10px 12px; font-size: 11px; flex-shrink: 0; }
+      .tab-content { padding: 8px; }
+      .data-table th { font-size: 10px; padding: 6px 4px; letter-spacing: 0.5px; }
+      .data-table td { padding: 6px 4px; font-size: 11px; }
+      .price-input { width: 85px; font-size: 12px; padding: 4px 6px; }
+      .field-input { font-size: 11px; padding: 4px 6px; }
+      .field-input.short { width: 45px; }
+      .login-card { width: 90vw; padding: 28px 20px; }
+    }
   </style>
 </head>
 <body>
@@ -289,16 +329,18 @@ async function loadHomesites(cid) {
 
 // Base Prices
 async function loadBasePrices(cid) {
-  const [plansRes, hfRes, anRes, zlRes] = await Promise.all([
-    api(`/api/communities/${cid}/plans`),
-    api('/api/homefiniti/plan-status'),
-    api('/api/anewgo/plan-status'),
-    api('/api/zillow/plan-status'),
-  ]);
+  const plansRes = await api(`/api/communities/${cid}/plans`);
   const data = await plansRes.json();
-  const hfStatuses = await hfRes.json();
-  const anStatuses = await anRes.json();
-  const zlStatuses = await zlRes.json();
+
+  // Fetch sync statuses individually — graceful fallback if any fail
+  async function safeFetchStatuses(url) {
+    try { const r = await api(url); return await r.json(); } catch { return []; }
+  }
+  const [hfStatuses, anStatuses, zlStatuses] = await Promise.all([
+    safeFetchStatuses('/api/homefiniti/plan-status'),
+    safeFetchStatuses('/api/anewgo/plan-status'),
+    safeFetchStatuses('/api/zillow/plan-status'),
+  ]);
   
   // Map plan name -> latest sync status per platform
   const hfMap = {}, anMap = {}, zlMap = {};
