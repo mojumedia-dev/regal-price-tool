@@ -339,12 +339,11 @@ app.post('/api/sync-all/:planId', auth, (req, res) => {
   res.json({ ok: true, message: `Sync started for ${plan.name}`, platforms });
 });
 
-// Sync by plan name — find plan by name and sync to all platforms
+// Sync by plan name — Available Homes → Zillow + Homefiniti only
 app.post('/api/sync-by-plan-name', auth, (req, res) => {
   const { planName } = req.body;
   if (!planName) return res.status(400).json({ error: 'planName required' });
 
-  // Find the plan by name (match against plan_name in available_homes or name in plans)
   const plan = db.prepare('SELECT * FROM plans WHERE name = ? OR name LIKE ?').get(planName, `%${planName}%`);
   if (!plan) return res.status(404).json({ error: `No plan found matching "${planName}"` });
 
@@ -366,17 +365,17 @@ app.post('/api/sync-by-plan-name', auth, (req, res) => {
     });
   }
 
+  // Available Homes → Zillow + Homefiniti only
   fireSync('Homefiniti', 'homefiniti_sync_log', getHomefinitiPlanId, updatePlanPrice);
-  fireSync('ANewGo', 'anewgo_sync_log', getAnewgoPlanId, updateAnewgoPrice);
   fireSync('Zillow', 'zillow_sync_log', getZillowPlanId, updateZillowPrice);
 
-  if (!platforms.length) return res.status(400).json({ error: `Plan "${plan.name}" not mapped to any platform` });
+  if (!platforms.length) return res.status(400).json({ error: `Plan "${plan.name}" not mapped to Homefiniti or Zillow` });
 
   db.save();
   res.json({ ok: true, message: `Sync started for ${plan.name}`, platforms, planId: plan.id });
 });
 
-// Sync all plans for a community
+// Sync all plans for a community — Homesites → ANewGo only
 app.post('/api/sync-community/:cid', auth, (req, res) => {
   const plans = db.prepare('SELECT * FROM plans WHERE community_id = ? ORDER BY sort_order').all(req.params.cid);
   if (!plans.length) return res.status(404).json({ error: 'No plans found for this community' });
@@ -386,25 +385,20 @@ app.post('/api/sync-community/:cid', auth, (req, res) => {
   for (const plan of plans) {
     if (!plan.base_price) continue;
 
-    function fireSync(platform, table, checkFn, syncFn) {
-      if (!checkFn(plan.name)) return;
-      syncCount++;
-      const log = db.prepare(`INSERT INTO ${table} (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)`).run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
-      const logId = log.lastInsertRowid;
-      syncFn(plan.name, plan.base_price).then(result => {
-        db.prepare(`UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`)
-          .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
-        db.save();
-      }).catch(err => {
-        db.prepare(`UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`)
-          .run('failed', err.message, logId);
-        db.save();
-      });
-    }
-
-    fireSync('Homefiniti', 'homefiniti_sync_log', getHomefinitiPlanId, updatePlanPrice);
-    fireSync('ANewGo', 'anewgo_sync_log', getAnewgoPlanId, updateAnewgoPrice);
-    fireSync('Zillow', 'zillow_sync_log', getZillowPlanId, updateZillowPrice);
+    // Homesites → ANewGo only
+    if (!getAnewgoPlanId(plan.name)) continue;
+    syncCount++;
+    const log = db.prepare('INSERT INTO anewgo_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(plan.name, plan.id, plan.base_price, plan.base_price, 'pending');
+    const logId = log.lastInsertRowid;
+    updateAnewgoPrice(plan.name, plan.base_price).then(result => {
+      db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+      db.save();
+    }).catch(err => {
+      db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run('failed', err.message, logId);
+      db.save();
+    });
   }
 
   db.save();
