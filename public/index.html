@@ -31,7 +31,7 @@
     .topbar-right button { background: #6B1D2A; border: none; color: white; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; }
     .topbar-right button:hover { background: #4A1420; }
     
-    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .container { max-width: 100%; margin: 0 auto; padding: 24px 32px; }
     
     /* Community selector */
     .community-selector { margin-bottom: 24px; }
@@ -51,15 +51,15 @@
     
     /* Tables */
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { background: #6B1D2A; color: white; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; text-align: center; }
+    .data-table th { background: #6B1D2A; color: white; padding: 8px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; text-align: center; white-space: nowrap; }
     .data-table th:first-child { text-align: left; }
-    .data-table td { padding: 10px 12px; text-align: center; border-bottom: 1px solid #F0F0F0; font-size: 13px; }
+    .data-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #F0F0F0; font-size: 13px; }
     .data-table td:first-child { text-align: left; font-weight: 500; }
     .data-table tr:nth-child(even) { background: #FAFAFA; }
     .data-table tr:hover { background: #FFF5F5; }
     
     /* Price input */
-    .price-input { width: 120px; padding: 6px 8px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px; font-weight: 600; text-align: right; font-family: inherit; color: #6B1D2A; }
+    .price-input { width: 100px; padding: 5px 6px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px; font-weight: 600; text-align: right; font-family: inherit; color: #6B1D2A; }
     .price-input:focus { outline: none; border-color: #6B1D2A; box-shadow: 0 0 0 3px rgba(107,29,42,0.1); }
     .price-input.changed { border-color: #E67E22; background: #FEF9E7; }
     .price-input.saved { border-color: #27AE60; background: #EAFAF1; }
@@ -67,7 +67,7 @@
     .field-input:focus { outline: none; border-color: #6B1D2A; background: white; box-shadow: 0 0 0 2px rgba(107,29,42,0.1); }
     .field-input.changed { border-color: #E67E22; background: #FEF9E7; }
     .field-input.saved { border-color: #27AE60; background: #EAFAF1; }
-    .field-input.short { width: 70px; }
+    .field-input.short { width: 55px; }
     
     /* Actions */
     .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
@@ -112,14 +112,14 @@
     .sync-badge.failed { background: #FDEDEC; color: #E74C3C; cursor: pointer; }
     .sync-badge.none { background: #F0F0F0; color: #999; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    .btn-sync { padding: 4px 10px; font-size: 11px; background: #3498DB; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .btn-sync { padding: 3px 8px; font-size: 10px; background: #3498DB; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; }
     .btn-sync:hover { background: #2980B9; }
     .btn-sync:disabled { background: #BDC3C7; cursor: not-allowed; }
     .btn-sync.anewgo { background: #8E44AD; }
     .btn-sync.anewgo:hover { background: #7D3C98; }
     .btn-sync.zillow { background: #006AFF; }
     .btn-sync.zillow:hover { background: #0055CC; }
-    .sync-cell { text-align: center; min-width: 80px; }
+    .sync-cell { text-align: center; min-width: 56px; }
     .sync-cell .sync-badge { display: block; margin-bottom: 2px; }
 
     /* Responsive */
