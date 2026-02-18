@@ -105,22 +105,20 @@
 
     .generating { opacity: 0.6; pointer-events: none; }
 
-    /* Homefiniti Sync */
+    /* Sync */
     .sync-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .sync-badge.pending { background: #FEF9E7; color: #E67E22; animation: pulse 1.5s infinite; }
     .sync-badge.synced { background: #EAFAF1; color: #27AE60; }
     .sync-badge.failed { background: #FDEDEC; color: #E74C3C; cursor: pointer; }
+    .sync-badge.partial { background: #FFF3E0; color: #E67E22; }
     .sync-badge.none { background: #F0F0F0; color: #999; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    .btn-sync { padding: 3px 8px; font-size: 10px; background: #3498DB; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; }
-    .btn-sync:hover { background: #2980B9; }
+    .btn-sync { padding: 4px 12px; font-size: 11px; background: #27AE60; color: white; border: none; border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .btn-sync:hover { background: #219A52; }
     .btn-sync:disabled { background: #BDC3C7; cursor: not-allowed; }
-    .btn-sync.anewgo { background: #8E44AD; }
-    .btn-sync.anewgo:hover { background: #7D3C98; }
-    .btn-sync.zillow { background: #006AFF; }
-    .btn-sync.zillow:hover { background: #0055CC; }
-    .sync-cell { text-align: center; min-width: 56px; }
-    .sync-cell .sync-badge { display: block; margin-bottom: 2px; }
+    .sync-cell { text-align: center; min-width: 70px; }
+    .sync-cell .sync-badge { display: block; margin-bottom: 3px; font-size: 9px; }
+    .sync-detail { font-size: 9px; color: #999; line-height: 1.4; }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -348,15 +346,32 @@ async function loadBasePrices(cid) {
   anStatuses.forEach(s => { anMap[s.plan_name] = s; });
   zlStatuses.forEach(s => { zlMap[s.plan_name] = s; });
 
-  function syncBadgeHTML(sync) {
-    if (!sync) return '<span class="sync-badge none">—</span>';
-    return `<span class="sync-badge ${sync.status}" title="${sync.error_message || sync.status}">${sync.status}</span>`;
+  // Compute combined sync status for a plan
+  function combinedSyncStatus(hf, an, zl) {
+    const statuses = [hf, an, zl].map(s => s ? s.status : null);
+    if (statuses.some(s => s === 'failed')) return 'failed';
+    if (statuses.some(s => s === 'pending')) return 'pending';
+    if (statuses.some(s => s === 'synced') && statuses.some(s => !s)) return 'partial';
+    if (statuses.every(s => s === 'synced')) return 'synced';
+    return 'none';
+  }
+
+  function combinedBadgeHTML(hf, an, zl) {
+    const status = combinedSyncStatus(hf, an, zl);
+    const labels = { synced: '✅ Synced', failed: '❌ Failed', pending: '⏳ Syncing', partial: '⚠️ Partial', none: '—' };
+    const platformDetail = [
+      hf ? `HF: ${hf.status}` : 'HF: —',
+      an ? `AN: ${an.status}` : 'AN: —',
+      zl ? `ZL: ${zl.status}` : 'ZL: —'
+    ].join(' · ');
+    return `<span class="sync-badge ${status}" title="${platformDetail}">${labels[status]}</span>
+            <div class="sync-detail">${platformDetail}</div>`;
   }
   
   const el = document.getElementById('tab-base-prices');
   el.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Plan</th><th>Total SQFT</th><th>Finished SQFT</th><th>Floors</th><th>Beds</th><th>Baths</th><th>Garage</th><th>Starting At</th><th>Homefiniti</th><th>ANewGo</th><th>Zillow</th></tr></thead>
+      <thead><tr><th>Plan</th><th>Total SQFT</th><th>Finished SQFT</th><th>Floors</th><th>Beds</th><th>Baths</th><th>Garage</th><th>Starting At</th><th>Sync</th></tr></thead>
       <tbody>${data.map(d => {
         return `<tr>
         <td>${d.name}</td>
@@ -367,9 +382,7 @@ async function loadBasePrices(cid) {
         <td><input class="field-input short" type="text" value="${d.baths_range}" data-type="plans" data-id="${d.id}" data-field="baths_range" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.garage_range}" data-type="plans" data-id="${d.id}" data-field="garage_range" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.base_price)}" data-type="plans" data-id="${d.id}" data-original="${d.base_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
-        <td class="sync-cell">${syncBadgeHTML(hfMap[d.name])}<button class="btn-sync" onclick="syncToPlatform('homefiniti', ${d.id}, this)" title="Sync to Homefiniti">🔄</button></td>
-        <td class="sync-cell">${syncBadgeHTML(anMap[d.name])}<button class="btn-sync anewgo" onclick="syncToPlatform('anewgo', ${d.id}, this)" title="Sync to ANewGo">🔄</button></td>
-        <td class="sync-cell">${syncBadgeHTML(zlMap[d.name])}<button class="btn-sync zillow" onclick="syncToPlatform('zillow', ${d.id}, this)" title="Sync to Zillow">🔄</button></td>
+        <td class="sync-cell">${combinedBadgeHTML(hfMap[d.name], anMap[d.name], zlMap[d.name])}<button class="btn-sync" onclick="syncAllPlatforms(${d.id}, this)">🔄 Sync</button></td>
       </tr>`;
       }).join('')}</tbody>
     </table>
@@ -537,7 +550,13 @@ async function showAuditLog() {
     return val || '—';
   }
   
-  content.innerHTML = `<table class="audit-table">
+  // Also fetch sync log
+  let syncLogs = [];
+  try { const sr = await api('/api/sync-log'); syncLogs = await sr.json(); } catch {}
+
+  content.innerHTML = `
+  <h3 style="margin-bottom:12px; color:#6B1D2A;">Price Changes</h3>
+  <table class="audit-table">
     <thead><tr><th>When</th><th>Who</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th></tr></thead>
     <tbody>${logs.map(l => `<tr>
       <td>${new Date(l.changed_at).toLocaleString()}</td>
@@ -547,54 +566,68 @@ async function showAuditLog() {
       <td>${formatVal(l.old_value, l.field_name)}</td>
       <td><strong>${formatVal(l.new_value, l.field_name)}</strong></td>
     </tr>`).join('')}</tbody>
-  </table>`;
+  </table>
+  ${syncLogs.length ? `
+  <h3 style="margin: 24px 0 12px; color:#6B1D2A;">Platform Sync History</h3>
+  <table class="audit-table">
+    <thead><tr><th>When</th><th>Platform</th><th>Plan</th><th>Price</th><th>Status</th><th>Details</th></tr></thead>
+    <tbody>${syncLogs.map(s => `<tr>
+      <td>${new Date(s.created_at).toLocaleString()}</td>
+      <td><strong>${s.platform}</strong></td>
+      <td>${s.plan_name}</td>
+      <td>${formatPrice(s.new_price)}</td>
+      <td><span class="sync-badge ${s.status}">${s.status === 'synced' ? '✅ Success' : s.status === 'failed' ? '❌ Failed' : s.status}</span></td>
+      <td style="font-size:11px; color:#888;">${s.error_message || (s.status === 'synced' ? 'Pushed successfully' : '—')}</td>
+    </tr>`).join('')}</tbody>
+  </table>` : ''}`;
 }
 
-// Platform Sync (unified for Homefiniti, ANewGo, Zillow)
-async function syncToPlatform(platform, planId, btn) {
+// Unified Sync — push to all platforms at once
+async function syncAllPlatforms(planId, btn) {
   btn.disabled = true;
-  btn.textContent = '⏳';
-  const names = { homefiniti: 'Homefiniti', anewgo: 'ANewGo', zillow: 'Zillow' };
-  toast(`Syncing to ${names[platform]}...`, 'info');
+  btn.textContent = '⏳ Syncing...';
+  toast('Syncing to all platforms...', 'info');
   
   try {
-    const res = await api(`/api/${platform}/sync/${planId}`, { method: 'POST' });
+    const res = await api(`/api/sync-all/${planId}`, { method: 'POST' });
     const data = await res.json();
     if (data.ok) {
-      toast(`${data.message} - syncing in background`, 'success');
-      pollPlatformSync(platform, btn);
+      toast(`Syncing ${data.platforms.join(', ')} in background...`, 'success');
+      pollAllSync(btn);
     } else {
       toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
       btn.disabled = false;
-      btn.textContent = '🔄';
+      btn.textContent = '🔄 Sync';
     }
   } catch (err) {
     toast('Sync error: ' + err.message, 'error');
     btn.disabled = false;
-    btn.textContent = '🔄';
+    btn.textContent = '🔄 Sync';
   }
 }
 
-function pollPlatformSync(platform, btn) {
+function pollAllSync(btn) {
   let attempts = 0;
   const poll = setInterval(async () => {
     attempts++;
     if (attempts > 30) {
       clearInterval(poll);
       btn.disabled = false;
-      btn.textContent = '🔄';
+      btn.textContent = '🔄 Sync';
       return;
     }
     try {
-      const res = await api(`/api/${platform}/plan-status`);
-      const statuses = await res.json();
-      const hasPending = statuses.some(s => s.status === 'pending');
+      const [hfRes, anRes, zlRes] = await Promise.all([
+        api('/api/homefiniti/plan-status').then(r => r.json()).catch(() => []),
+        api('/api/anewgo/plan-status').then(r => r.json()).catch(() => []),
+        api('/api/zillow/plan-status').then(r => r.json()).catch(() => []),
+      ]);
+      const hasPending = [...hfRes, ...anRes, ...zlRes].some(s => s.status === 'pending');
       if (!hasPending) {
         clearInterval(poll);
         const cid = document.getElementById('communitySelect').value;
         await loadBasePrices(cid);
-        const names = { homefiniti: 'Homefiniti', anewgo: 'ANewGo', zillow: 'Zillow' };
-        toast(`${names[platform]} sync complete!`, 'success');
+        toast('All platform syncs complete!', 'success');
       }
     } catch {}
   }, 2000);
@@ -619,14 +652,12 @@ async function masterSync() {
     
     content.innerHTML = `
       <table class="audit-table">
-        <thead><tr><th>Community</th><th>Plan</th><th>Price</th><th>Homefiniti</th><th>ANewGo</th><th>Zillow</th></tr></thead>
+        <thead><tr><th>Community</th><th>Plan</th><th>Price</th><th>Status</th></tr></thead>
         <tbody>${allPlans.map(p => `<tr id="sync-row-${p.id}">
           <td>${p.communityName}</td>
           <td>${p.name}</td>
           <td style="font-weight:600; color:#6B1D2A;">${formatPrice(p.base_price)}</td>
-          <td id="hf-${p.id}"><span class="sync-badge none">Ready</span></td>
-          <td id="an-${p.id}"><span class="sync-badge none">Ready</span></td>
-          <td id="zl-${p.id}"><span class="sync-badge none">Ready</span></td>
+          <td id="sync-status-${p.id}"><span class="sync-badge none">Ready</span></td>
         </tr>`).join('')}</tbody>
       </table>
       <p style="margin-top:12px; font-size:13px; color:#888;">Total: ${allPlans.length} plans across ${communities.length} communities</p>`;
@@ -658,14 +689,18 @@ async function startMasterSync() {
         const statusRes = await api('/api/master-sync/status');
         const status = await statusRes.json();
         
-        // Update each row
+        // Update each row with combined status
         status.forEach(s => {
-          const hfEl = document.getElementById(`hf-${s.plan_id}`);
-          const anEl = document.getElementById(`an-${s.plan_id}`);
-          const zlEl = document.getElementById(`zl-${s.plan_id}`);
-          if (hfEl) hfEl.innerHTML = `<span class="sync-badge ${s.homefiniti || 'none'}">${s.homefiniti || '—'}</span>`;
-          if (anEl) anEl.innerHTML = `<span class="sync-badge ${s.anewgo || 'none'}">${s.anewgo || '—'}</span>`;
-          if (zlEl) zlEl.innerHTML = `<span class="sync-badge ${s.zillow || 'none'}">${s.zillow || '—'}</span>`;
+          const el = document.getElementById(`sync-status-${s.plan_id}`);
+          if (!el) return;
+          const statuses = [s.homefiniti, s.anewgo, s.zillow];
+          let overall = 'pending';
+          if (statuses.some(x => x === 'failed')) overall = 'failed';
+          else if (statuses.every(x => x === 'synced')) overall = 'synced';
+          else if (statuses.some(x => x === 'synced')) overall = 'partial';
+          const labels = { synced: '✅ All Synced', failed: '❌ Failed', pending: '⏳ Syncing...', partial: '⚠️ Partial' };
+          const detail = `HF: ${s.homefiniti || '—'} · AN: ${s.anewgo || '—'} · ZL: ${s.zillow || '—'}`;
+          el.innerHTML = `<span class="sync-badge ${overall}">${labels[overall] || '—'}</span><div class="sync-detail">${detail}</div>`;
         });
         
         const allDone = status.every(s => 
