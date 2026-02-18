@@ -322,7 +322,17 @@ async function loadHomesites(cid) {
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.premium_price)}" data-type="homesites" data-id="${d.id}" data-original="${d.premium_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
       </tr>`).join('')}</tbody>
     </table>
-    ${actionsHTML('homesites')}`;
+    <div class="actions">
+      <div class="pdf-actions">
+        <button class="btn btn-secondary" onclick="generatePDF('homesites')">📄 Generate PDF</button>
+        <button class="btn btn-secondary" onclick="downloadPDF('homesites')">⬇️ Download PDF</button>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span class="save-status" id="status-homesites"></span>
+        <button class="btn btn-success" id="syncAllHomesitesBtn" onclick="syncCommunityPlans(this)">🔄 Sync All Plans</button>
+        <button class="btn btn-primary" onclick="saveAll('homesites')">💾 Save Changes</button>
+      </div>
+    </div>`;
 }
 
 // Base Prices
@@ -393,10 +403,40 @@ async function loadBasePrices(cid) {
 async function loadAvailableHomes(cid) {
   const res = await api(`/api/communities/${cid}/available-homes`);
   const data = await res.json();
+  // Fetch sync statuses for available homes
+  async function safeFetchStatuses(url) {
+    try { const r = await api(url); return await r.json(); } catch { return []; }
+  }
+  const [ahHfStatuses, ahAnStatuses, ahZlStatuses] = await Promise.all([
+    safeFetchStatuses('/api/homefiniti/plan-status'),
+    safeFetchStatuses('/api/anewgo/plan-status'),
+    safeFetchStatuses('/api/zillow/plan-status'),
+  ]);
+  const ahHfMap = {}, ahAnMap = {}, ahZlMap = {};
+  ahHfStatuses.forEach(s => { ahHfMap[s.plan_name] = s; });
+  ahAnStatuses.forEach(s => { ahAnMap[s.plan_name] = s; });
+  ahZlStatuses.forEach(s => { ahZlMap[s.plan_name] = s; });
+
+  function ahCombinedStatus(planName) {
+    const hf = ahHfMap[planName], an = ahAnMap[planName], zl = ahZlMap[planName];
+    const statuses = [hf, an, zl].map(s => s ? s.status : null);
+    if (statuses.some(s => s === 'failed')) return 'failed';
+    if (statuses.some(s => s === 'pending')) return 'pending';
+    if (statuses.some(s => s === 'synced') && statuses.some(s => !s)) return 'partial';
+    if (statuses.every(s => s === 'synced')) return 'synced';
+    return 'none';
+  }
+
+  function ahBadgeHTML(planName) {
+    const status = ahCombinedStatus(planName);
+    const labels = { synced: '✅', failed: '❌', pending: '⏳', partial: '⚠️', none: '—' };
+    return `<span class="sync-badge ${status}" title="${status}">${labels[status]}</span>`;
+  }
+
   const el = document.getElementById('tab-available-homes');
   el.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Plan</th><th>Address</th><th>Total SQFT</th><th>Finished</th><th>Beds</th><th>Baths</th><th>Gar</th><th>Est. Move In</th><th>Price</th></tr></thead>
+      <thead><tr><th>Plan</th><th>Address</th><th>Total SQFT</th><th>Finished</th><th>Beds</th><th>Baths</th><th>Gar</th><th>Est. Move In</th><th>Price</th><th>Sync</th></tr></thead>
       <tbody>${data.map(d => `<tr>
         <td><input class="field-input" type="text" value="${d.plan_name}" data-type="available-homes" data-id="${d.id}" data-field="plan_name" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.address}" data-type="available-homes" data-id="${d.id}" data-field="address" onchange="fieldChanged(this)"></td>
@@ -407,6 +447,7 @@ async function loadAvailableHomes(cid) {
         <td><input class="field-input short" type="text" value="${d.garage}" data-type="available-homes" data-id="${d.id}" data-field="garage" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.est_move_in}" data-type="available-homes" data-id="${d.id}" data-field="est_move_in" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
+        <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncByPlanName('${d.plan_name.replace(/'/g, "\\'")}', this)">🔄</button></td>
       </tr>`).join('')}</tbody>
     </table>
     ${actionsHTML('available-homes')}`;
@@ -631,6 +672,73 @@ function pollAllSync(btn) {
       }
     } catch {}
   }, 2000);
+}
+
+// Sync by plan name — find the plan ID and sync all platforms
+async function syncByPlanName(planName, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  toast(`Syncing ${planName} to all platforms...`, 'info');
+  try {
+    const res = await api(`/api/sync-by-plan-name`, { method: 'POST', body: JSON.stringify({ planName }) });
+    const data = await res.json();
+    if (data.ok) {
+      toast(`Syncing ${planName}: ${data.platforms.join(', ')}`, 'success');
+      pollAllSync(btn);
+    } else {
+      toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
+      btn.disabled = false;
+      btn.textContent = '🔄';
+    }
+  } catch (err) {
+    toast('Sync error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔄';
+  }
+}
+
+// Sync all plans for the current community
+async function syncCommunityPlans(btn) {
+  const cid = document.getElementById('communitySelect').value;
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  toast('Syncing all plans for this community...', 'info');
+  try {
+    const res = await api(`/api/sync-community/${cid}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      toast(`Syncing ${data.planCount} plans across ${data.platforms} platform operations...`, 'success');
+      // Poll until done
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        if (attempts > 40) { clearInterval(poll); btn.disabled = false; btn.textContent = '🔄 Sync All Plans'; return; }
+        try {
+          const [hf, an, zl] = await Promise.all([
+            api('/api/homefiniti/plan-status').then(r => r.json()).catch(() => []),
+            api('/api/anewgo/plan-status').then(r => r.json()).catch(() => []),
+            api('/api/zillow/plan-status').then(r => r.json()).catch(() => []),
+          ]);
+          const hasPending = [...hf, ...an, ...zl].some(s => s.status === 'pending');
+          if (!hasPending) {
+            clearInterval(poll);
+            btn.disabled = false;
+            btn.textContent = '✅ Done!';
+            setTimeout(() => { btn.textContent = '🔄 Sync All Plans'; }, 3000);
+            toast('All community plans synced!', 'success');
+          }
+        } catch {}
+      }, 2000);
+    } else {
+      toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync All Plans';
+    }
+  } catch (err) {
+    toast('Sync error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync All Plans';
+  }
 }
 
 // Master Sync
