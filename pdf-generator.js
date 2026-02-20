@@ -5,8 +5,8 @@ const fs = require('fs');
 const logoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'logo.png')).toString('base64');
 const logoDataUrl = `data:image/png;base64,${logoBase64}`;
 
-const ehoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'equal-housing-logo.jpg')).toString('base64');
-const ehoDataUrl = `data:image/jpeg;base64,${ehoBase64}`;
+const ehoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'equal-housing-logo.png')).toString('base64');
+const ehoDataUrl = `data:image/png;base64,${ehoBase64}`;
 
 function formatPrice(cents) {
   return '$' + Number(cents).toLocaleString('en-US');
