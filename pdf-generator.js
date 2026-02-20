@@ -5,8 +5,14 @@ const fs = require('fs');
 const logoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'logo.png')).toString('base64');
 const logoDataUrl = `data:image/png;base64,${logoBase64}`;
 
-const ehoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'equal-housing-logo.png')).toString('base64');
-const ehoDataUrl = `data:image/png;base64,${ehoBase64}`;
+// EHO logo as inline SVG (white on transparent for dark footer)
+const ehoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="28" height="34">
+  <polygon points="50,5 95,45 80,45 80,95 20,95 20,45 5,45" fill="none" stroke="white" stroke-width="3"/>
+  <rect x="40" y="60" width="20" height="35" fill="none" stroke="white" stroke-width="2.5"/>
+  <text x="50" y="108" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="6" font-weight="bold">EQUAL HOUSING</text>
+  <text x="50" y="116" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="6" font-weight="bold">OPPORTUNITY</text>
+</svg>`;
+const ehoDataUrl = `data:image/svg+xml;base64,${Buffer.from(ehoSvg).toString('base64')}`;
 
 function formatPrice(cents) {
   return '$' + Number(cents).toLocaleString('en-US');
