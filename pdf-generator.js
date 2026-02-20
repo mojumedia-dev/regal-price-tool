@@ -5,6 +5,9 @@ const fs = require('fs');
 const logoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'logo.png')).toString('base64');
 const logoDataUrl = `data:image/png;base64,${logoBase64}`;
 
+const ehoBase64 = fs.readFileSync(path.join(__dirname, 'public', 'equal-housing-logo.jpg')).toString('base64');
+const ehoDataUrl = `data:image/jpeg;base64,${ehoBase64}`;
+
 function formatPrice(cents) {
   return '$' + Number(cents).toLocaleString('en-US');
 }
@@ -184,7 +187,7 @@ function footerHTML(community) {
         <span>${community.phone || '385-446-5524'}</span>
       </div>
       <div class="footer-bottom">
-        <div class="eho-icon">EQUAL<br>HOUSING<br>OPPORTUNITY</div>
+        <img src="${ehoDataUrl}" style="width:28px;height:28px;object-fit:contain;">
         <div class="footer-disclaimer">
           Pricing ans specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and
           may include upgraded options available for purchase at a higher cost that are not included in the base price of the home, whether visually represented as
@@ -233,34 +236,43 @@ function homesitesHTML(community, data) {
 }
 
 function basePricesHTML(community, data) {
+  const compact = data.length > 10;
+  const rowPad = compact ? '4px 6px' : '8px';
   const rows = data.map(d => `
     <tr>
-      <td>${d.name}</td>
-      <td style="text-align:center;">${formatNumber(d.total_sqft)}</td>
-      <td style="text-align:center;">${d.finished_sqft_range}</td>
-      <td style="text-align:center;">${d.floors}</td>
-      <td style="text-align:center;">${d.beds_range}</td>
-      <td style="text-align:center;">${d.baths_range}</td>
-      <td style="text-align:center;">${d.garage_range}</td>
-      <td style="text-align:center; font-weight:600;">${formatPrice(d.base_price)}</td>
+      <td style="padding:${rowPad};">${d.name}</td>
+      <td style="text-align:center;padding:${rowPad};">${formatNumber(d.total_sqft)}</td>
+      <td style="text-align:center;padding:${rowPad};">${d.finished_sqft_range}</td>
+      <td style="text-align:center;padding:${rowPad};">${d.floors}</td>
+      <td style="text-align:center;padding:${rowPad};">${d.beds_range}</td>
+      <td style="text-align:center;padding:${rowPad};">${d.baths_range}</td>
+      <td style="text-align:center;padding:${rowPad};">${d.garage_range}</td>
+      <td style="text-align:center;padding:${rowPad};font-weight:600;">${formatPrice(d.base_price)}</td>
     </tr>
   `).join('');
 
   return `<!DOCTYPE html><html><head><style>${commonStyles}
-    .community-info { margin-top: 40px; page-break-before: auto; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-style: italic; color: #2D2D2D; margin-bottom: 20px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 11px; }
-    .info-section h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 8px; letter-spacing: 1px; }
-    .info-section p, .info-section li { font-size: 10px; line-height: 1.6; color: #444; }
+    ${compact ? `
+      table { font-size: 9px; } 
+      thead th { font-size: 7.5px; padding: 5px 4px; }
+      .header { margin-bottom: 12px; padding-bottom: 8px; }
+      .header-text h1 { font-size: 26px; }
+      .page { padding: 0.35in 0.5in 1.0in 0.5in; }
+    ` : ''}
+    .community-info { margin-top: ${compact ? '8px' : '40px'}; page-break-inside: avoid; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${compact ? '18px' : '28px'}; font-style: italic; color: #2D2D2D; margin-bottom: ${compact ? '6px' : '20px'}; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${compact ? '12px' : '24px'}; font-size: ${compact ? '9px' : '11px'}; }
+    .info-section h3 { font-size: ${compact ? '9px' : '11px'}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: ${compact ? '4px' : '8px'}; letter-spacing: 1px; }
+    .info-section p, .info-section li { font-size: ${compact ? '8.5px' : '10px'}; line-height: 1.4; color: #444; }
     .info-section ul { list-style: disc; padding-left: 16px; }
-    .sales-office { margin-top: 20px; }
-    .sales-office h3 { font-size: 10px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 1px; }
+    .sales-office { margin-top: ${compact ? '8px' : '20px'}; }
+    .sales-office h3 { font-size: ${compact ? '8.5px' : '10px'}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 1px; }
     .sales-office p { font-size: 10px; color: #444; }
-    .sales-manager { margin-top: 16px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: 10px; color: #666; }
-    .sales-manager .phone { font-size: 16px; font-weight: 300; color: #2D2D2D; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 2px 0; }
+    .sales-manager { margin-top: ${compact ? '6px' : '16px'}; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${compact ? '11px' : '14px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${compact ? '8.5px' : '10px'}; color: #666; }
+    .sales-manager .phone { font-size: ${compact ? '12px' : '16px'}; font-weight: 300; color: #2D2D2D; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: ${compact ? '1px 0' : '2px 0'}; }
   </style></head><body>
     <div class="page">
       <div class="header">
@@ -306,6 +318,7 @@ function basePricesHTML(community, data) {
             <div class="sales-manager">
               <h3 style="font-style:italic;">${community.sales_manager_name || ''}</h3>
               <p>Community Sales Manager</p>
+              <p>${community.sales_office_address || ''}${community.sales_office_city ? ', ' + community.sales_office_city : ''}</p>
               <p class="phone">${community.sales_manager_phone || ''}</p>
             </div>
           </div>
