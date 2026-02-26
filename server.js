@@ -34,6 +34,56 @@ function auth(req, res, next) {
   } catch { return res.status(401).json({ error: 'Invalid token' }); }
 }
 
+// ===== PUBLIC API (no auth) =====
+
+// Public: List all communities
+app.get('/api/public/communities', (req, res) => {
+  const communities = db.prepare('SELECT * FROM communities ORDER BY id').all();
+  const result = communities.map(c => {
+    const plans = db.prepare('SELECT * FROM plans WHERE community_id = ? ORDER BY sort_order').all(c.id);
+    const priceRange = plans.filter(p => p.base_price).map(p => p.base_price);
+    return {
+      ...c,
+      planCount: plans.length,
+      minPrice: priceRange.length ? Math.min(...priceRange) : null,
+      maxPrice: priceRange.length ? Math.max(...priceRange) : null
+    };
+  });
+  res.json(result);
+});
+
+// Public: Single community with all data
+app.get('/api/public/communities/:slug', (req, res) => {
+  const community = db.prepare('SELECT * FROM communities WHERE slug = ?').get(req.params.slug);
+  if (!community) return res.status(404).json({ error: 'Community not found' });
+  const plans = db.prepare('SELECT * FROM plans WHERE community_id = ? ORDER BY sort_order').all(community.id);
+  const homesites = db.prepare('SELECT * FROM homesites WHERE community_id = ? ORDER BY sort_order').all(community.id);
+  const availableHomes = db.prepare('SELECT * FROM available_homes WHERE community_id = ? ORDER BY sort_order').all(community.id);
+  res.json({ ...community, plans, homesites, availableHomes });
+});
+
+// Public: Single plan detail
+app.get('/api/public/plans/:id', (req, res) => {
+  const plan = db.prepare('SELECT p.*, c.name as community_name, c.slug as community_slug FROM plans p JOIN communities c ON p.community_id = c.id WHERE p.id = ?').get(req.params.id);
+  if (!plan) return res.status(404).json({ error: 'Plan not found' });
+  res.json(plan);
+});
+
+// Public: All available homes
+app.get('/api/public/available-homes', (req, res) => {
+  const homes = db.prepare('SELECT ah.*, c.name as community_name, c.slug as community_slug FROM available_homes ah JOIN communities c ON ah.community_id = c.id ORDER BY c.id, ah.sort_order').all();
+  res.json(homes);
+});
+
+// Public: Summary stats
+app.get('/api/public/stats', (req, res) => {
+  const communities = db.prepare('SELECT COUNT(*) as count FROM communities').get().count;
+  const plans = db.prepare('SELECT COUNT(*) as count FROM plans').get().count;
+  const availableHomes = db.prepare('SELECT COUNT(*) as count FROM available_homes').get().count;
+  const homesites = db.prepare('SELECT COUNT(*) as count FROM homesites').get().count;
+  res.json({ communities, plans, availableHomes, homesites });
+});
+
 // Login
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
