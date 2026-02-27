@@ -105,7 +105,7 @@ async function updatePlanPrice(planName, newPrice) {
     // Navigate to plan edit form
     const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
     console.log(`[Homefiniti] Navigating to ${editUrl}`);
-    await page.goto(editUrl, { waitUntil: 'networkidle2', timeout: 15000 });
+    await page.goto(editUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     await new Promise(r => setTimeout(r, 2000));
 
     // Verify we're on the right plan
@@ -200,7 +200,7 @@ async function syncMultiplePrices(updates) {
 
       try {
         const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
-        await page.goto(editUrl, { waitUntil: 'networkidle2', timeout: 15000 });
+        await page.goto(editUrl, { waitUntil: 'networkidle2', timeout: 60000 });
         await new Promise(r => setTimeout(r, 2000));
 
         const oldPrice = await page.$eval('#plan-base_price', el => el.value);
