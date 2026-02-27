@@ -141,10 +141,14 @@ async function updatePlanPrice(planName, newPrice) {
     ]);
     await new Promise(r => setTimeout(r, 2000));
 
-    // Check for errors on the page
+    // Check for errors on the page (ignore non-error alerts like "Analytics not activated")
     const errorMsg = await page.evaluate(() => {
       const alerts = document.querySelectorAll('.alert-danger, .error-message, .errorlist');
-      return Array.from(alerts).map(e => e.textContent.trim()).filter(Boolean).join('; ');
+      return Array.from(alerts)
+        .map(e => e.textContent.trim())
+        .filter(Boolean)
+        .filter(msg => !/analytics.*not activated/i.test(msg))
+        .join('; ');
     });
 
     if (errorMsg) {
