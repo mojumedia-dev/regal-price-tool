@@ -96,7 +96,8 @@ async function getSessionCookies() {
 }
 
 /**
- * Get the CSRF token and current form data from the plan edit page via fetch
+ * Get all form fields from the plan edit page via fetch
+ * Returns CSRF token, all input values, and current price
  */
 async function getPlanFormData(cookies, homefinitiId) {
   const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
@@ -110,15 +111,36 @@ async function getPlanFormData(cookies, homefinitiId) {
   const csrfMatch = html.match(/name="csrfmiddlewaretoken"\s+value="([^"]+)"/);
   if (!csrfMatch) throw new Error('Could not find CSRF token on plan edit page');
   
-  // Extract current price
-  const priceMatch = html.match(/id="plan-base_price"[^>]*value="([^"]*)"/);
-  const oldPrice = priceMatch ? priceMatch[1] : '0';
+  // Extract ALL form input fields (name + value pairs)
+  const fields = {};
+  // Hidden inputs and text inputs
+  const inputRegex = /<input[^>]*name="([^"]*)"[^>]*value="([^"]*)"[^>]*>/gi;
+  let match;
+  while ((match = inputRegex.exec(html)) !== null) {
+    fields[match[1]] = match[2];
+  }
+  // Also try value before name pattern
+  const inputRegex2 = /<input[^>]*value="([^"]*)"[^>]*name="([^"]*)"[^>]*>/gi;
+  while ((match = inputRegex2.exec(html)) !== null) {
+    if (!fields[match[2]]) fields[match[2]] = match[1];
+  }
+  // Textareas
+  const textareaRegex = /<textarea[^>]*name="([^"]*)"[^>]*>([\s\S]*?)<\/textarea>/gi;
+  while ((match = textareaRegex.exec(html)) !== null) {
+    fields[match[1]] = match[2];
+  }
+  // Select elements - get selected option
+  const selectRegex = /<select[^>]*name="([^"]*)"[^>]*>[\s\S]*?<option[^>]*selected[^>]*value="([^"]*)"[\s\S]*?<\/select>/gi;
+  while ((match = selectRegex.exec(html)) !== null) {
+    fields[match[1]] = match[2];
+  }
   
-  // Extract plan name for verification
-  const nameMatch = html.match(/id="plan-name"[^>]*value="([^"]*)"/);
-  const planName = nameMatch ? nameMatch[1] : '';
+  const oldPrice = fields['base_price'] || '0';
+  const planName = fields['name'] || '';
   
-  return { csrfToken: csrfMatch[1], oldPrice, planName, cookies: response.headers.get('set-cookie') || '' };
+  console.log(`[Homefiniti] Found ${Object.keys(fields).length} form fields: ${Object.keys(fields).join(', ')}`);
+  
+  return { csrfToken: csrfMatch[1], oldPrice, planName, fields };
 }
 
 /**
@@ -152,11 +174,19 @@ async function updatePlanPrice(planName, newPrice) {
     
     console.log(`[Homefiniti] Current price for ${formData.planName || planName}: ${formData.oldPrice}`);
     
-    // Submit the form via POST
+    // Submit the form via POST with ALL fields (Django requires complete form submission)
     const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
     const body = new URLSearchParams();
     body.append('csrfmiddlewaretoken', formData.csrfToken);
-    body.append('base_price', String(newPrice));
+    // Add all scraped form fields
+    for (const [key, value] of Object.entries(formData.fields)) {
+      if (key === 'csrfmiddlewaretoken') continue;
+      if (key === 'base_price') {
+        body.append(key, String(newPrice));
+      } else {
+        body.append(key, value);
+      }
+    }
     body.append('form_save', '');
     
     const saveResponse = await fetch(editUrl, {
@@ -221,7 +251,14 @@ async function syncMultiplePrices(updates) {
         const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
         const body = new URLSearchParams();
         body.append('csrfmiddlewaretoken', formData.csrfToken);
-        body.append('base_price', String(price));
+        for (const [key, value] of Object.entries(formData.fields)) {
+          if (key === 'csrfmiddlewaretoken') continue;
+          if (key === 'base_price') {
+            body.append(key, String(price));
+          } else {
+            body.append(key, value);
+          }
+        }
         body.append('form_save', '');
         
         await fetch(editUrl, {
