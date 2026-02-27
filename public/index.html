@@ -602,7 +602,7 @@ async function showAuditLog() {
     <tbody>${logs.map(l => `<tr>
       <td>${new Date(l.changed_at).toLocaleString()}</td>
       <td>${l.user_name}</td>
-      <td>${typeLabels[l.entity_type] || l.entity_type} #${l.entity_id}</td>
+      <td>${l.entity_name || ((typeLabels[l.entity_type] || l.entity_type) + ' #' + l.entity_id)}</td>
       <td>${fieldLabels[l.field_name] || l.field_name}</td>
       <td>${formatVal(l.old_value, l.field_name)}</td>
       <td><strong>${formatVal(l.new_value, l.field_name)}</strong></td>

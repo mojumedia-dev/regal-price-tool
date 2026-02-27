@@ -260,6 +260,21 @@ app.get('/api/audit-log', auth, (req, res) => {
     ORDER BY pcl.changed_at DESC
     LIMIT 100
   `).all();
+  
+  // Resolve entity names
+  for (const log of logs) {
+    if (log.entity_type === 'plans') {
+      const plan = db.prepare('SELECT name FROM plans WHERE id = ?').get(log.entity_id);
+      log.entity_name = plan?.name || `Plan #${log.entity_id}`;
+    } else if (log.entity_type === 'homesites') {
+      const hs = db.prepare('SELECT h.lot_number, c.name as community FROM homesites h JOIN communities c ON c.id = h.community_id WHERE h.id = ?').get(log.entity_id);
+      log.entity_name = hs ? `${hs.community} Lot ${hs.lot_number}` : `Homesite #${log.entity_id}`;
+    } else if (log.entity_type === 'available-homes') {
+      const ah = db.prepare('SELECT ah.plan_name, ah.address, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(log.entity_id);
+      log.entity_name = ah ? `${ah.community} - ${ah.plan_name}` : `Home #${log.entity_id}`;
+    }
+  }
+  
   res.json(logs);
 });
 
