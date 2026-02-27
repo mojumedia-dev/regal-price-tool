@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { updatePlanPrice, getHomefinitiPlanId, normalizePlanName, PLAN_ID_MAP } = require('./homefiniti-sync');
-const { updatePlanPrice: updateAnewgoPrice, getAnewgoPlanId } = require('./anewgo-sync');
+const { updatePlanPrice: updateAnewgoPrice, getAnewgoPlanId, updateLotPremium: updateAnewgoLotPremium, updateInventoryPrice: updateAnewgoInventoryPrice, getAnewgoLotId } = require('./anewgo-sync');
 const { updatePlanPrice: updateZillowPrice, getZillowPlanId } = require('./zillow-sync');
 
 const app = express();
@@ -214,6 +214,36 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
       firePlatformSync('Homefiniti', 'homefiniti_sync_log', getHomefinitiPlanId, updatePlanPrice);
       firePlatformSync('ANewGo', 'anewgo_sync_log', getAnewgoPlanId, updateAnewgoPrice);
       firePlatformSync('Zillow', 'zillow_sync_log', getZillowPlanId, updateZillowPrice);
+    }
+  }
+  
+  // Sync lot premium to ANewGo for homesite changes
+  if (type === 'homesites') {
+    const homesite = db.prepare('SELECT h.lot_number, c.name as community FROM homesites h JOIN communities c ON c.id = h.community_id WHERE h.id = ?').get(id);
+    if (homesite) {
+      syncStatuses['ANewGo'] = 'pending';
+      updateAnewgoLotPremium(homesite.community, homesite.lot_number, price).then(result => {
+        console.log(`[ANewGo] Lot ${homesite.lot_number} (${homesite.community}): ${result.success ? '✅ synced' : '❌ ' + result.message}`);
+      }).catch(err => {
+        console.error(`[ANewGo] Lot ${homesite.lot_number}: ❌ ${err.message}`);
+      });
+    }
+  }
+  
+  // Sync inventory price to ANewGo for available-home changes
+  if (type === 'available-homes') {
+    const home = db.prepare('SELECT ah.address, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(id);
+    if (home) {
+      const lotMatch = home.address.match(/#(\d+)/);
+      if (lotMatch) {
+        const lotNumber = lotMatch[1];
+        syncStatuses['ANewGo'] = 'pending';
+        updateAnewgoInventoryPrice(home.community, lotNumber, price).then(result => {
+          console.log(`[ANewGo] Inventory lot ${lotNumber} (${home.community}): ${result.success ? '✅ synced' : '❌ ' + result.message}`);
+        }).catch(err => {
+          console.error(`[ANewGo] Inventory lot ${lotNumber}: ❌ ${err.message}`);
+        });
+      }
     }
   }
   
