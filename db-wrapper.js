@@ -17,7 +17,12 @@ class Statement {
   run(...params) {
     const flatParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
     this.db.run(this.sql, flatParams);
-    return { changes: this.db.getRowsModified() };
+    const changes = this.db.getRowsModified();
+    const stmt = this.db.prepare('SELECT last_insert_rowid() as id');
+    stmt.step();
+    const lastInsertRowid = stmt.getAsObject().id;
+    stmt.free();
+    return { changes, lastInsertRowid };
   }
   get(...params) {
     const flatParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
