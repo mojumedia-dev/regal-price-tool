@@ -307,6 +307,93 @@ app.post('/api/anewgo/sync/:planId', auth, (req, res) => {
   res.json({ ok: true, message: `ANewGo sync started for ${plan.name}`, syncLogId });
 });
 
+// Manual sync: homesite lot premium to ANewGo
+app.post('/api/anewgo/sync-homesite/:id', auth, (req, res) => {
+  const homesite = db.prepare('SELECT h.*, c.name as community FROM homesites h JOIN communities c ON c.id = h.community_id WHERE h.id = ?').get(req.params.id);
+  if (!homesite) return res.status(404).json({ error: 'Homesite not found' });
+  if (!getAnewgoLotId(homesite.community, homesite.lot_number)) {
+    return res.status(400).json({ error: `Lot ${homesite.lot_number} (${homesite.community}) not mapped to ANewGo` });
+  }
+
+  const syncLog = db.prepare(
+    'INSERT INTO anewgo_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(`Lot ${homesite.lot_number} (${homesite.community})`, homesite.id, homesite.premium_price, homesite.premium_price, 'pending');
+  const syncLogId = syncLog.lastInsertRowid;
+
+  updateAnewgoLotPremium(homesite.community, homesite.lot_number, homesite.premium_price).then(result => {
+    db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+    db.save();
+  }).catch(err => {
+    db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run('failed', err.message, syncLogId);
+    db.save();
+  });
+
+  db.save();
+  res.json({ ok: true, message: `ANewGo sync started for Lot ${homesite.lot_number}`, syncLogId });
+});
+
+// Manual sync: available home price to ANewGo
+app.post('/api/anewgo/sync-available-home/:id', auth, (req, res) => {
+  const home = db.prepare('SELECT ah.*, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(req.params.id);
+  if (!home) return res.status(404).json({ error: 'Available home not found' });
+  
+  const lotMatch = home.address.match(/#(\d+)/);
+  if (!lotMatch) return res.status(400).json({ error: 'Cannot extract lot number from address' });
+  const lotNumber = lotMatch[1];
+
+  const syncLog = db.prepare(
+    'INSERT INTO anewgo_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(`${home.plan_name} Lot ${lotNumber} (${home.community})`, home.id, home.price, home.price, 'pending');
+  const syncLogId = syncLog.lastInsertRowid;
+
+  updateAnewgoInventoryPrice(home.community, lotNumber, home.price).then(result => {
+    db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+    db.save();
+  }).catch(err => {
+    db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run('failed', err.message, syncLogId);
+    db.save();
+  });
+
+  db.save();
+  res.json({ ok: true, message: `ANewGo sync started for ${home.plan_name} Lot ${lotNumber}`, syncLogId });
+});
+
+// Sync all homesites for a community to ANewGo
+app.post('/api/anewgo/sync-community-homesites/:communityId', auth, (req, res) => {
+  const community = db.prepare('SELECT * FROM communities WHERE id = ?').get(req.params.communityId);
+  if (!community) return res.status(404).json({ error: 'Community not found' });
+  
+  const homesites = db.prepare('SELECT * FROM homesites WHERE community_id = ?').all(community.id);
+  let synced = 0;
+  
+  for (const hs of homesites) {
+    if (!getAnewgoLotId(community.name, hs.lot_number)) continue;
+    
+    const syncLog = db.prepare(
+      'INSERT INTO anewgo_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+    ).run(`Lot ${hs.lot_number} (${community.name})`, hs.id, hs.premium_price, hs.premium_price, 'pending');
+    const syncLogId = syncLog.lastInsertRowid;
+    
+    updateAnewgoLotPremium(community.name, hs.lot_number, hs.premium_price).then(result => {
+      db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+      db.save();
+    }).catch(err => {
+      db.prepare('UPDATE anewgo_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run('failed', err.message, syncLogId);
+      db.save();
+    });
+    synced++;
+  }
+  
+  db.save();
+  res.json({ ok: true, message: `Syncing ${synced} homesites to ANewGo`, count: synced });
+});
+
 // Zillow/NHF sync status
 app.get('/api/zillow/plan-status', auth, (req, res) => {
   const statuses = db.prepare(`

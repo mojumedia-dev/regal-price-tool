@@ -313,13 +313,14 @@ async function loadHomesites(cid) {
   const el = document.getElementById('tab-homesites');
   el.innerHTML = `
     <table class="data-table">
-      <thead><tr><th>Lot</th><th>Address</th><th>Direction</th><th>SQ.FT</th><th>Homesite Premium</th></tr></thead>
+      <thead><tr><th>Lot</th><th>Address</th><th>Direction</th><th>SQ.FT</th><th>Homesite Premium</th><th>ANewGo</th></tr></thead>
       <tbody>${data.map(d => `<tr>
         <td><input class="field-input" type="text" value="${d.lot_number}" data-type="homesites" data-id="${d.id}" data-field="lot_number" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.address}" data-type="homesites" data-id="${d.id}" data-field="address" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.front_facing_direction}" data-type="homesites" data-id="${d.id}" data-field="front_facing_direction" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.sqft}" data-type="homesites" data-id="${d.id}" data-field="sqft" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.premium_price)}" data-type="homesites" data-id="${d.id}" data-original="${d.premium_price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
+        <td class="sync-cell"><button class="btn-sync anewgo" onclick="syncHomesiteToAnewgo(${d.id}, this)" title="Sync lot premium to ANewGo">🔄</button></td>
       </tr>`).join('')}</tbody>
     </table>
     <div class="actions">
@@ -329,7 +330,7 @@ async function loadHomesites(cid) {
       </div>
       <div style="display:flex; gap:8px; align-items:center;">
         <span class="save-status" id="status-homesites"></span>
-        <button class="btn btn-success" id="syncAllHomesitesBtn" onclick="syncCommunityPlans(this)">🔄 Sync to ANewGo</button>
+        <button class="btn btn-success" id="syncAllHomesitesBtn" onclick="syncAllHomesites(this)">🔄 Sync All to ANewGo</button>
         <button class="btn btn-primary" onclick="saveAll('homesites')">💾 Save Changes</button>
       </div>
     </div>`;
@@ -447,7 +448,7 @@ async function loadAvailableHomes(cid) {
         <td><input class="field-input short" type="text" value="${d.garage}" data-type="available-homes" data-id="${d.id}" data-field="garage" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.est_move_in}" data-type="available-homes" data-id="${d.id}" data-field="est_move_in" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
-        <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncByPlanName('${d.plan_name.replace(/'/g, "\\'")}', this)">🔄</button></td>
+        <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncAvailableHome(${d.id}, '${d.plan_name.replace(/'/g, "\\'")}', this)">🔄 Sync</button></td>
       </tr>`).join('')}</tbody>
     </table>
     ${actionsHTML('available-homes')}`;
@@ -694,6 +695,120 @@ async function syncByPlanName(planName, btn) {
     toast('Sync error: ' + err.message, 'error');
     btn.disabled = false;
     btn.textContent = '🔄';
+  }
+}
+
+// Sync a single homesite lot premium to ANewGo
+async function syncHomesiteToAnewgo(homesiteId, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳';
+  toast('Syncing lot premium to ANewGo...', 'info');
+  try {
+    const res = await api(`/api/anewgo/sync-homesite/${homesiteId}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      pollSyncLog(btn, '🔄', data.syncLogId);
+    } else {
+      toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
+      btn.disabled = false;
+      btn.textContent = '🔄';
+    }
+  } catch (err) {
+    toast('Sync error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔄';
+  }
+}
+
+// Sync a single available home to all platforms (plan sync + ANewGo inventory)
+async function syncAvailableHome(homeId, planName, btn) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  toast(`Syncing ${planName} to all platforms...`, 'info');
+  try {
+    // Sync plan price to all platforms
+    const planRes = await api(`/api/sync-by-plan-name`, { method: 'POST', body: JSON.stringify({ planName }) });
+    const planData = await planRes.json();
+    // Also sync inventory price to ANewGo
+    const ahRes = await api(`/api/anewgo/sync-available-home/${homeId}`, { method: 'POST' });
+    const ahData = await ahRes.json();
+    
+    if (planData.ok || ahData.ok) {
+      toast(`Syncing ${planName} to platforms...`, 'success');
+      pollAllSync(btn);
+    } else {
+      toast('Sync failed', 'error');
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync';
+    }
+  } catch (err) {
+    toast('Sync error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync';
+  }
+}
+
+// Poll a specific sync log entry for completion
+function pollSyncLog(btn, resetText, syncLogId) {
+  let attempts = 0;
+  const poll = setInterval(async () => {
+    attempts++;
+    if (attempts > 30) {
+      clearInterval(poll);
+      btn.disabled = false;
+      btn.textContent = resetText;
+      return;
+    }
+    try {
+      const an = await api('/api/anewgo/plan-status').then(r => r.json()).catch(() => []);
+      const hasPending = an.some(s => s.status === 'pending');
+      if (!hasPending) {
+        clearInterval(poll);
+        btn.disabled = false;
+        btn.textContent = '✅';
+        toast('Synced to ANewGo!', 'success');
+        setTimeout(() => { btn.textContent = resetText; }, 3000);
+      }
+    } catch {}
+  }, 2000);
+}
+
+// Sync all homesites for the current community to ANewGo
+async function syncAllHomesites(btn) {
+  const cid = document.getElementById('communitySelect').value;
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  toast('Syncing all lot premiums to ANewGo...', 'info');
+  try {
+    const res = await api(`/api/anewgo/sync-community-homesites/${cid}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      toast(`Syncing ${data.count} lots to ANewGo...`, 'success');
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        if (attempts > 60) { clearInterval(poll); btn.disabled = false; btn.textContent = '🔄 Sync All to ANewGo'; return; }
+        try {
+          const an = await api('/api/anewgo/plan-status').then(r => r.json()).catch(() => []);
+          const hasPending = an.some(s => s.status === 'pending');
+          if (!hasPending) {
+            clearInterval(poll);
+            btn.disabled = false;
+            btn.textContent = '✅ Done!';
+            setTimeout(() => { btn.textContent = '🔄 Sync All to ANewGo'; }, 3000);
+            toast('All lot premiums synced to ANewGo!', 'success');
+          }
+        } catch {}
+      }, 2000);
+    } else {
+      toast('Sync failed: ' + (data.error || 'Unknown'), 'error');
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync All to ANewGo';
+    }
+  } catch (err) {
+    toast('Sync error: ' + err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '🔄 Sync All to ANewGo';
   }
 }
 
