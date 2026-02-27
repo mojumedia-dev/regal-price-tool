@@ -187,7 +187,7 @@ async function updatePlanPrice(planName, newPrice) {
         body.append(key, value);
       }
     }
-    body.append('form_save', '');
+    body.append('form_save', '1');
     
     const saveResponse = await fetch(editUrl, {
       method: 'POST',
@@ -259,7 +259,7 @@ async function syncMultiplePrices(updates) {
             body.append(key, value);
           }
         }
-        body.append('form_save', '');
+        body.append('form_save', '1');
         
         await fetch(editUrl, {
           method: 'POST',
