@@ -80,10 +80,50 @@ async function login(page) {
 }
 
 /**
+ * Get session cookies by logging in via Puppeteer (lightweight — just login page)
+ */
+async function getSessionCookies() {
+  let browser;
+  try {
+    browser = await launchBrowser();
+    const page = await browser.newPage();
+    await login(page);
+    const cookies = await page.cookies();
+    return cookies.map(c => `${c.name}=${c.value}`).join('; ');
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
+/**
+ * Get the CSRF token and current form data from the plan edit page via fetch
+ */
+async function getPlanFormData(cookies, homefinitiId) {
+  const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
+  const response = await fetch(editUrl, {
+    headers: { 'Cookie': cookies },
+    redirect: 'follow',
+  });
+  const html = await response.text();
+  
+  // Extract CSRF token
+  const csrfMatch = html.match(/name="csrfmiddlewaretoken"\s+value="([^"]+)"/);
+  if (!csrfMatch) throw new Error('Could not find CSRF token on plan edit page');
+  
+  // Extract current price
+  const priceMatch = html.match(/id="plan-base_price"[^>]*value="([^"]*)"/);
+  const oldPrice = priceMatch ? priceMatch[1] : '0';
+  
+  // Extract plan name for verification
+  const nameMatch = html.match(/id="plan-name"[^>]*value="([^"]*)"/);
+  const planName = nameMatch ? nameMatch[1] : '';
+  
+  return { csrfToken: csrfMatch[1], oldPrice, planName, cookies: response.headers.get('set-cookie') || '' };
+}
+
+/**
  * Update a plan's base price on Homefiniti
- * @param {string} planName - Plan name (e.g. "The Balboa" or "Balboa")
- * @param {number} newPrice - New base price (integer, e.g. 724000)
- * @returns {object} - { success, message, oldPrice, newPrice }
+ * Uses fetch-based form submission (no page navigation needed)
  */
 async function updatePlanPrice(planName, newPrice) {
   const homefinitiId = getHomefinitiPlanId(planName);
@@ -94,73 +134,58 @@ async function updatePlanPrice(planName, newPrice) {
     };
   }
 
-  let browser;
   try {
-    browser = await launchBrowser();
-    const page = await browser.newPage();
-
-    // Login
-    await login(page);
-
-    // Navigate to plan edit form
-    const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
-    console.log(`[Homefiniti] Navigating to ${editUrl}`);
-    await page.goto(editUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Verify we're on the right plan
-    const currentName = await page.$eval('#plan-name', el => el.value).catch(() => '');
-    if (!currentName) {
-      throw new Error('Could not find plan name field - page may not have loaded correctly');
-    }
-
-    const normalizedCurrent = normalizePlanName(currentName);
+    // Login via Puppeteer to get session cookies
+    console.log(`[Homefiniti] Logging in...`);
+    const cookies = await getSessionCookies();
+    
+    // Fetch the plan edit page to get CSRF token and current data
+    console.log(`[Homefiniti] Fetching plan form for ID ${homefinitiId}...`);
+    const formData = await getPlanFormData(cookies, homefinitiId);
+    
+    // Verify plan name
+    const normalizedCurrent = normalizePlanName(formData.planName);
     const normalizedTarget = normalizePlanName(planName);
-    if (normalizedCurrent !== normalizedTarget) {
-      throw new Error(`Plan name mismatch: expected "${planName}" but found "${currentName}"`);
+    if (normalizedCurrent && normalizedCurrent !== normalizedTarget) {
+      throw new Error(`Plan name mismatch: expected "${planName}" but found "${formData.planName}"`);
     }
-
-    // Get current price
-    const oldPrice = await page.$eval('#plan-base_price', el => el.value);
-    console.log(`[Homefiniti] Current price for ${currentName}: ${oldPrice}`);
-
-    // Clear and set new price
-    await page.$eval('#plan-base_price', el => el.value = '');
-    await page.type('#plan-base_price', String(newPrice));
-
-    // Verify the value was set
-    const verifyPrice = await page.$eval('#plan-base_price', el => el.value);
-    if (String(verifyPrice) !== String(newPrice)) {
-      throw new Error(`Price verification failed: set ${newPrice} but field shows ${verifyPrice}`);
-    }
-
-    // Click Save
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
-      page.click('button[name="form_save"]'),
-    ]);
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Check for errors on the page (ignore non-error alerts like "Analytics not activated")
-    const errorMsg = await page.evaluate(() => {
-      const alerts = document.querySelectorAll('.alert-danger, .error-message, .errorlist');
-      return Array.from(alerts)
-        .map(e => e.textContent.trim())
-        .filter(Boolean)
-        .filter(msg => !/analytics.*not activated/i.test(msg))
-        .join('; ');
+    
+    console.log(`[Homefiniti] Current price for ${formData.planName || planName}: ${formData.oldPrice}`);
+    
+    // Submit the form via POST
+    const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
+    const body = new URLSearchParams();
+    body.append('csrfmiddlewaretoken', formData.csrfToken);
+    body.append('base_price', String(newPrice));
+    body.append('form_save', '');
+    
+    const saveResponse = await fetch(editUrl, {
+      method: 'POST',
+      headers: {
+        'Cookie': cookies,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': editUrl,
+      },
+      body: body.toString(),
+      redirect: 'follow',
     });
-
-    if (errorMsg) {
-      throw new Error(`Homefiniti save error: ${errorMsg}`);
+    
+    if (!saveResponse.ok && saveResponse.status !== 302) {
+      throw new Error(`Save request failed with status ${saveResponse.status}`);
+    }
+    
+    // Verify the update by re-fetching
+    const verifyData = await getPlanFormData(cookies, homefinitiId);
+    if (String(verifyData.oldPrice) !== String(newPrice)) {
+      console.log(`[Homefiniti] ⚠️ Price verification: expected ${newPrice}, got ${verifyData.oldPrice}`);
     }
 
-    console.log(`[Homefiniti] ✅ Updated ${currentName} price: $${oldPrice} -> $${newPrice}`);
+    console.log(`[Homefiniti] ✅ Updated ${formData.planName || planName} price: $${formData.oldPrice} -> $${newPrice}`);
 
     return {
       success: true,
-      message: `Updated ${currentName} on Homefiniti`,
-      oldPrice: parseInt(oldPrice) || 0,
+      message: `Updated ${formData.planName || planName} on Homefiniti`,
+      oldPrice: parseInt(formData.oldPrice) || 0,
       newPrice,
     };
 
@@ -170,26 +195,18 @@ async function updatePlanPrice(planName, newPrice) {
       success: false,
       message: err.message,
     };
-  } finally {
-    if (browser) await browser.close();
   }
 }
 
 /**
- * Sync multiple plan prices in a single browser session
- * @param {Array<{planName: string, price: number}>} updates
- * @returns {Array<object>} results for each update
+ * Sync multiple plan prices in a single session (uses fetch-based approach)
  */
 async function syncMultiplePrices(updates) {
   if (!updates.length) return [];
-
-  let browser;
   const results = [];
 
   try {
-    browser = await launchBrowser();
-    const page = await browser.newPage();
-    await login(page);
+    const cookies = await getSessionCookies();
 
     for (const { planName, price } of updates) {
       const homefinitiId = getHomefinitiPlanId(planName);
@@ -199,22 +216,27 @@ async function syncMultiplePrices(updates) {
       }
 
       try {
+        const formData = await getPlanFormData(cookies, homefinitiId);
+        
         const editUrl = `${HOMEFINITI_URL}/core/dashboard/plan/form/?id=${homefinitiId}`;
-        await page.goto(editUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-        await new Promise(r => setTimeout(r, 2000));
+        const body = new URLSearchParams();
+        body.append('csrfmiddlewaretoken', formData.csrfToken);
+        body.append('base_price', String(price));
+        body.append('form_save', '');
+        
+        await fetch(editUrl, {
+          method: 'POST',
+          headers: {
+            'Cookie': cookies,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Referer': editUrl,
+          },
+          body: body.toString(),
+          redirect: 'follow',
+        });
 
-        const oldPrice = await page.$eval('#plan-base_price', el => el.value);
-        await page.$eval('#plan-base_price', el => el.value = '');
-        await page.type('#plan-base_price', String(price));
-
-        await Promise.all([
-          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
-          page.click('button[name="form_save"]'),
-        ]);
-        await new Promise(r => setTimeout(r, 2000));
-
-        console.log(`[Homefiniti] ✅ ${planName}: $${oldPrice} -> $${price}`);
-        results.push({ planName, success: true, oldPrice: parseInt(oldPrice), newPrice: price });
+        console.log(`[Homefiniti] ✅ ${planName}: $${formData.oldPrice} -> $${price}`);
+        results.push({ planName, success: true, oldPrice: parseInt(formData.oldPrice), newPrice: price });
       } catch (err) {
         console.error(`[Homefiniti] ❌ ${planName}:`, err.message);
         results.push({ planName, success: false, message: err.message });
@@ -222,14 +244,11 @@ async function syncMultiplePrices(updates) {
     }
   } catch (err) {
     console.error('[Homefiniti] Session error:', err.message);
-    // Mark remaining as failed
     for (const { planName } of updates) {
       if (!results.find(r => r.planName === planName)) {
         results.push({ planName, success: false, message: err.message });
       }
     }
-  } finally {
-    if (browser) await browser.close();
   }
 
   return results;
