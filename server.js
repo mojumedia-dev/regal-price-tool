@@ -185,70 +185,8 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
   // Update
   db.prepare(`UPDATE ${config.table} SET ${config.field} = ? WHERE id = ?`).run(price, id);
   
-  // Trigger all platform syncs for plan base price changes (non-blocking)
-  let syncStatuses = {};
-  if (type === 'plans') {
-    const plan = db.prepare('SELECT name FROM plans WHERE id = ?').get(id);
-    if (plan) {
-      // Helper to fire sync for a platform
-      function firePlatformSync(platform, table, checkFn, syncFn) {
-        if (!checkFn(plan.name)) return;
-        syncStatuses[platform] = 'pending';
-        const log = db.prepare(
-          `INSERT INTO ${table} (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)`
-        ).run(plan.name, id, current.price, price, 'pending');
-        const logId = log.lastInsertRowid;
-        syncFn(plan.name, price).then(result => {
-          db.prepare(
-            `UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`
-          ).run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
-          console.log(`[${platform}] ${plan.name}: ${result.success ? '✅ synced' : '❌ ' + result.message}`);
-        }).catch(err => {
-          db.prepare(
-            `UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`
-          ).run('failed', err.message, logId);
-          console.error(`[${platform}] ${plan.name}: ❌ ${err.message}`);
-        });
-      }
-
-      firePlatformSync('Homefiniti', 'homefiniti_sync_log', getHomefinitiPlanId, updatePlanPrice);
-      firePlatformSync('ANewGo', 'anewgo_sync_log', getAnewgoPlanId, updateAnewgoPrice);
-      firePlatformSync('Zillow', 'zillow_sync_log', getZillowPlanId, updateZillowPrice);
-    }
-  }
-  
-  // Sync lot premium to ANewGo for homesite changes
-  if (type === 'homesites') {
-    const homesite = db.prepare('SELECT h.lot_number, c.name as community FROM homesites h JOIN communities c ON c.id = h.community_id WHERE h.id = ?').get(id);
-    if (homesite) {
-      syncStatuses['ANewGo'] = 'pending';
-      updateAnewgoLotPremium(homesite.community, homesite.lot_number, price).then(result => {
-        console.log(`[ANewGo] Lot ${homesite.lot_number} (${homesite.community}): ${result.success ? '✅ synced' : '❌ ' + result.message}`);
-      }).catch(err => {
-        console.error(`[ANewGo] Lot ${homesite.lot_number}: ❌ ${err.message}`);
-      });
-    }
-  }
-  
-  // Sync inventory price to ANewGo for available-home changes
-  if (type === 'available-homes') {
-    const home = db.prepare('SELECT ah.address, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(id);
-    if (home) {
-      const lotMatch = home.address.match(/#(\d+)/);
-      if (lotMatch) {
-        const lotNumber = lotMatch[1];
-        syncStatuses['ANewGo'] = 'pending';
-        updateAnewgoInventoryPrice(home.community, lotNumber, price).then(result => {
-          console.log(`[ANewGo] Inventory lot ${lotNumber} (${home.community}): ${result.success ? '✅ synced' : '❌ ' + result.message}`);
-        }).catch(err => {
-          console.error(`[ANewGo] Inventory lot ${lotNumber}: ❌ ${err.message}`);
-        });
-      }
-    }
-  }
-  
   db.save();
-  res.json({ ok: true, old: current.price, new: price, syncStatuses });
+  res.json({ ok: true, old: current.price, new: price });
 });
 
 // Audit log
