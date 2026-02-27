@@ -4,9 +4,6 @@
  * Fields: cost, costMin, costMax
  */
 
-const puppeteer = require('puppeteer');
-
-const ANEWGO_LOGIN_URL = 'https://dashboard.anewgo.com/login';
 const ANEWGO_GQL_URL = 'https://nexus.anewgo.com/api/graphql_gateway';
 const ANEWGO_CLIENT_NAME = 'regal';
 const ANEWGO_EMAIL = process.env.ANEWGO_EMAIL || 'regalhomes.adam@gmail.com';
@@ -180,50 +177,28 @@ function getAnewgoPlanId(planName) {
 }
 
 /**
- * Get a JWT token by logging in via Puppeteer and capturing the GraphQL auth response
+ * Get a JWT token via direct GraphQL authenticate query (no Puppeteer needed)
  */
 async function getAuthToken() {
-  let browser;
-  try {
-    browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
-      defaultViewport: { width: 1400, height: 900 },
-    });
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+  const response = await fetch(ANEWGO_GQL_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `{ authenticate(email: "${ANEWGO_EMAIL}", password: "${ANEWGO_PASSWORD}") }`,
+    }),
+  });
 
-    let token = null;
-    page.on('response', async (response) => {
-      if (response.url().includes('graphql_gateway') && !token) {
-        try {
-          const body = await response.text();
-          const data = JSON.parse(body);
-          if (data.data?.authenticate) {
-            token = data.data.authenticate;
-          }
-        } catch {}
-      }
-    });
-
-    await page.goto(ANEWGO_LOGIN_URL, { waitUntil: 'networkidle2', timeout: 30000 });
-    await new Promise(r => setTimeout(r, 2000));
-    await page.type('#userEmail', ANEWGO_EMAIL);
-    await page.type('#password', ANEWGO_PASSWORD);
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
-      page.click('button[type="submit"]'),
-    ]);
-    await new Promise(r => setTimeout(r, 3000));
-
-    if (!token) {
-      throw new Error('Failed to capture ANewGo auth token');
-    }
-
-    return token;
-  } finally {
-    if (browser) await browser.close();
+  const data = await response.json();
+  if (data.errors) {
+    throw new Error(`ANewGo auth failed: ${JSON.stringify(data.errors)}`);
   }
+
+  const token = data.data?.authenticate;
+  if (!token) {
+    throw new Error('Failed to get ANewGo auth token');
+  }
+
+  return token;
 }
 
 /**
