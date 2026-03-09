@@ -44,34 +44,60 @@ async function login(page) {
 async function scrapeListings(page) {
   console.log('📋 Navigating to listings page...');
   await page.goto(MLS_LISTINGS_URL, { waitUntil: 'networkidle2', timeout: 60000 });
+  
+  console.log('⏳ Waiting for listings to load...');
+  // Wait for content to load - look for MLS numbers or addresses
+  try {
+    await page.waitForFunction(
+      () => document.body.textContent.includes('2109020') || 
+            document.body.textContent.includes('11378 N Regal Ridge'),
+      { timeout: 30000 }
+    );
+    console.log('✅ Listings loaded!');
+  } catch {
+    console.log('⚠️  Timeout waiting for listings - continuing anyway...');
+  }
+  
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   console.log('📊 Scraping listing data...');
   
-  // Extract MLS numbers and addresses from the table
+  // Extract MLS numbers and addresses from the page
   const listings = await page.evaluate(() => {
     const results = [];
-    const rows = document.querySelectorAll('tr, .listing-row');
     
-    for (const row of rows) {
-      const cells = row.querySelectorAll('td, .cell');
-      if (cells.length < 3) continue;
+    // Get all text content and try different selectors
+    const allElements = document.querySelectorAll('*');
+    
+    // Look for elements containing 7-digit MLS numbers
+    const mlsElements = Array.from(allElements).filter(el => /\b\d{7}\b/.test(el.textContent));
+    
+    for (const mlsEl of mlsElements) {
+      // Try to find MLS number
+      const mlsMatch = mlsEl.textContent.match(/\b(\d{7})\b/);
+      if (!mlsMatch) continue;
       
-      // Try to extract address and MLS number from the row text
-      const text = row.textContent;
+      const mlsNumber = mlsMatch[1];
       
-      // Look for patterns like:
-      // - Address with apt number: "11378 N Regal Ridge Ct (#7)"
-      // - MLS number: typically 7 digits
+      // Look for address near this MLS number (in same row/container)
+      const container = mlsEl.closest('tr, div, section, article');
+      if (!container) continue;
       
-      const mlsMatch = text.match(/\b(\d{7})\b/);
-      const addressMatch = text.match(/\d+\s+[NSEW]\s+[A-Za-z\s]+(?:St|Dr|Ct|Ln|Way|Rd|Ave|Blvd|Cir)/i);
+      const containerText = container.textContent;
       
-      if (mlsMatch && addressMatch) {
-        results.push({
-          mls_number: mlsMatch[1],
-          address: addressMatch[0].trim(),
-        });
+      // Match addresses like "11378 N Regal Ridge Ct #7" or "1722 S 4300 St #103"
+      const addressMatch = containerText.match(/(\d+\s+[NSEW]?\s*[A-Za-z0-9\s]+(?:St|Dr|Ct|Ln|Way|Rd|Ave|Blvd|Cir|Court|Street|Drive|Lane|Road|Avenue|Boulevard|Circle)(?:\s+#?\d+)?)/i);
+      
+      if (addressMatch) {
+        const address = addressMatch[1].trim();
+        
+        // Avoid duplicates
+        if (!results.some(r => r.mls_number === mlsNumber)) {
+          results.push({
+            mls_number: mlsNumber,
+            address: address,
+          });
+        }
       }
     }
     
