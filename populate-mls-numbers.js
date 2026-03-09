@@ -6,7 +6,7 @@
  */
 
 const puppeteer = require('puppeteer');
-const Database = require('better-sqlite3');
+const Database = require('./db-wrapper');
 const path = require('path');
 
 const MLS_LOGIN_URL = 'https://www.utahrealestate.com/auth/login/';
@@ -15,7 +15,7 @@ const MLS_EMAIL = process.env.MLS_EMAIL || 'Lloric';
 const MLS_PASSWORD = process.env.MLS_PASSWORD || 'Yvette3.3';
 
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'regal.db');
-const db = new Database(dbPath);
+let db;
 
 async function launchBrowser() {
   return puppeteer.launch({
@@ -44,7 +44,7 @@ async function login(page) {
 async function scrapeListings(page) {
   console.log('📋 Navigating to listings page...');
   await page.goto(MLS_LISTINGS_URL, { waitUntil: 'networkidle2', timeout: 60000 });
-  await page.waitForTimeout(2000);
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   console.log('📊 Scraping listing data...');
   
@@ -118,6 +118,8 @@ async function updateDatabase(listings) {
     }
   }
   
+  // Save changes to disk
+  db.save();
   db.close();
   console.log(`\n✅ Done! Matched ${matched} listings, updated ${updated} MLS numbers`);
 }
@@ -126,6 +128,10 @@ async function main() {
   let browser;
   
   try {
+    // Initialize database
+    await Database.init();
+    db = new Database(dbPath);
+    
     browser = await launchBrowser();
     const page = await browser.newPage();
     
@@ -139,6 +145,7 @@ async function main() {
     
   } catch (error) {
     console.error('❌ Error:', error.message);
+    console.error(error.stack);
     if (browser) await browser.close();
     process.exit(1);
   }
