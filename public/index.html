@@ -596,12 +596,17 @@ async function showAuditLog() {
   let syncLogs = [];
   try { const sr = await api('/api/sync-log'); syncLogs = await sr.json(); } catch {}
 
+  // Format timestamps in Mountain Time
+  function formatMST(dateStr) {
+    return new Date(dateStr).toLocaleString('en-US', { timeZone: 'America/Denver', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+  
   content.innerHTML = `
   <h3 style="margin-bottom:12px; color:#6B1D2A;">Price Changes</h3>
   <table class="audit-table">
-    <thead><tr><th>When</th><th>Who</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th></tr></thead>
+    <thead><tr><th>When (MST)</th><th>Who</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th></tr></thead>
     <tbody>${logs.map(l => `<tr>
-      <td>${new Date(l.changed_at).toLocaleString()}</td>
+      <td>${formatMST(l.changed_at)}</td>
       <td>${l.user_name}</td>
       <td>${l.entity_name || ((typeLabels[l.entity_type] || l.entity_type) + ' #' + l.entity_id)}</td>
       <td>${fieldLabels[l.field_name] || l.field_name}</td>
@@ -612,9 +617,9 @@ async function showAuditLog() {
   ${syncLogs.length ? `
   <h3 style="margin: 24px 0 12px; color:#6B1D2A;">Platform Sync History</h3>
   <table class="audit-table">
-    <thead><tr><th>When</th><th>Platform</th><th>Plan</th><th>Price</th><th>Status</th><th>Details</th></tr></thead>
+    <thead><tr><th>When (MST)</th><th>Platform</th><th>Plan</th><th>Price</th><th>Status</th><th>Details</th></tr></thead>
     <tbody>${syncLogs.map(s => `<tr>
-      <td>${new Date(s.created_at).toLocaleString()}</td>
+      <td>${formatMST(s.created_at)}</td>
       <td><strong>${s.platform}</strong></td>
       <td>${s.plan_name}</td>
       <td>${formatPrice(s.new_price)}</td>
