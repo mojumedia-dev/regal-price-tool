@@ -9,6 +9,7 @@ const fs = require('fs');
 const { updatePlanPrice, getHomefinitiPlanId, normalizePlanName, PLAN_ID_MAP } = require('./homefiniti-sync');
 const { updatePlanPrice: updateAnewgoPrice, getAnewgoPlanId, updateLotPremium: updateAnewgoLotPremium, updateInventoryPrice: updateAnewgoInventoryPrice, getAnewgoLotId } = require('./anewgo-sync');
 const { updatePlanPrice: updateZillowPrice, getZillowPlanId } = require('./zillow-sync');
+const { updateListingPrice: updateMLSPrice } = require('./mls-sync');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -141,7 +142,7 @@ app.put('/api/:type/:id/field', auth, (req, res) => {
   const allowedFields = {
     plans: ['total_sqft', 'finished_sqft_range', 'floors', 'beds_range', 'baths_range', 'garage_range'],
     homesites: ['lot_number', 'address', 'front_facing_direction', 'sqft'],
-    'available-homes': ['plan_name', 'address', 'total_sqft', 'finished_sqft', 'beds', 'baths', 'garage', 'est_move_in'],
+    'available-homes': ['plan_name', 'address', 'total_sqft', 'finished_sqft', 'beds', 'baths', 'garage', 'est_move_in', 'mls_number'],
   };
   
   const tableMap = { plans: 'plans', homesites: 'homesites', 'available-homes': 'available_homes' };
@@ -437,6 +438,30 @@ app.post('/api/zillow/sync/:planId', auth, (req, res) => {
   res.json({ ok: true, message: `Zillow sync started for ${plan.name}`, syncLogId });
 });
 
+// MLS sync — sync available home to MLS
+app.post('/api/mls/sync/:homeId', auth, (req, res) => {
+  const home = db.prepare('SELECT ah.*, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(req.params.homeId);
+  if (!home) return res.status(404).json({ error: 'Available home not found' });
+  if (!home.mls_number) return res.status(400).json({ error: 'MLS number not set for this listing' });
+
+  const syncLog = db.prepare(
+    'INSERT INTO mls_sync_log (listing_number, home_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
+  ).run(home.mls_number, home.id, home.price, home.price, 'pending');
+  const syncLogId = syncLog.lastInsertRowid;
+
+  updateMLSPrice(home.mls_number, home.price).then(result => {
+    db.prepare('UPDATE mls_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
+    db.save();
+  }).catch(err => {
+    db.prepare('UPDATE mls_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run('failed', err.message, syncLogId);
+    db.save();
+  });
+
+  res.json({ ok: true, message: `MLS sync started for listing ${home.mls_number}`, syncLogId });
+});
+
 // Unified sync — push one plan to all platforms at once
 app.post('/api/sync-all/:planId', auth, (req, res) => {
   const plan = db.prepare('SELECT * FROM plans WHERE id = ?').get(req.params.planId);
@@ -687,6 +712,7 @@ async function startServer() {
   
   // Run migrations
   try { require('./migrate-2026-02-13')(db); } catch(e) { console.error('Migration error:', e.message); }
+  try { require('./migrate-2026-03-09-mls')(db); } catch(e) { console.error('Migration error:', e.message); }
 
   // Create sync log tables
   db.exec(`
@@ -716,6 +742,17 @@ async function startServer() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       plan_name TEXT NOT NULL,
       plan_id INTEGER,
+      old_price INTEGER,
+      new_price INTEGER,
+      status TEXT NOT NULL DEFAULT 'pending',
+      error_message TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      completed_at DATETIME
+    );
+    CREATE TABLE IF NOT EXISTS mls_sync_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      listing_number TEXT NOT NULL,
+      home_id INTEGER,
       old_price INTEGER,
       new_price INTEGER,
       status TEXT NOT NULL DEFAULT 'pending',
