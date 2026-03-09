@@ -441,7 +441,7 @@ async function loadAvailableHomes(cid) {
       <tbody>${data.map(d => `<tr>
         <td><input class="field-input" type="text" value="${d.plan_name}" data-type="available-homes" data-id="${d.id}" data-field="plan_name" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.address}" data-type="available-homes" data-id="${d.id}" data-field="address" onchange="fieldChanged(this)"></td>
-        <td><input class="field-input short" type="text" value="${d.mls_number || ''}" data-type="available-homes" data-id="${d.id}" data-field="mls_number" onchange="fieldChanged(this)" placeholder="Auto" readonly style="background:#f5f5f5"></td>
+        <td><input class="field-input short" type="text" value="${d.mls_number || ''}" data-type="available-homes" data-id="${d.id}" data-field="mls_number" onchange="fieldChanged(this)" placeholder="MLS #"></td>
         <td><input class="field-input short" type="text" value="${d.total_sqft}" data-type="available-homes" data-id="${d.id}" data-field="total_sqft" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.finished_sqft}" data-type="available-homes" data-id="${d.id}" data-field="finished_sqft" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.beds}" data-type="available-homes" data-id="${d.id}" data-field="beds" onchange="fieldChanged(this)"></td>
