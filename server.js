@@ -199,7 +199,7 @@ app.get('/api/audit-log', auth, (req, res) => {
     LIMIT 100
   `).all();
   
-  // Resolve entity names
+  // Resolve entity names and convert timestamps to ISO format
   for (const log of logs) {
     if (log.entity_type === 'plans') {
       const plan = db.prepare('SELECT name FROM plans WHERE id = ?').get(log.entity_id);
@@ -210,6 +210,10 @@ app.get('/api/audit-log', auth, (req, res) => {
     } else if (log.entity_type === 'available-homes') {
       const ah = db.prepare('SELECT ah.plan_name, ah.address, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(log.entity_id);
       log.entity_name = ah ? `${ah.community} - ${ah.plan_name}` : `Home #${log.entity_id}`;
+    }
+    // Convert SQLite timestamp to ISO format with UTC indicator
+    if (log.changed_at) {
+      log.changed_at = log.changed_at.replace(' ', 'T') + 'Z';
     }
   }
   
@@ -226,6 +230,13 @@ app.get('/api/sync-log', auth, (req, res) => {
     SELECT 'Zillow' as platform, plan_name, status, error_message, new_price, created_at, completed_at FROM zillow_sync_log
     ORDER BY created_at DESC LIMIT 100
   `).all();
+  
+  // Convert SQLite timestamps to ISO format with UTC indicator
+  logs.forEach(log => {
+    if (log.created_at) log.created_at = log.created_at.replace(' ', 'T') + 'Z';
+    if (log.completed_at) log.completed_at = log.completed_at.replace(' ', 'T') + 'Z';
+  });
+  
   res.json(logs);
 });
 
