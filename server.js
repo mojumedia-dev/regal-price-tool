@@ -438,18 +438,20 @@ app.post('/api/zillow/sync/:planId', auth, (req, res) => {
   res.json({ ok: true, message: `Zillow sync started for ${plan.name}`, syncLogId });
 });
 
-// MLS sync — sync available home to MLS
+// MLS sync — sync available home to MLS (by MLS number or address)
 app.post('/api/mls/sync/:homeId', auth, (req, res) => {
   const home = db.prepare('SELECT ah.*, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(req.params.homeId);
   if (!home) return res.status(404).json({ error: 'Available home not found' });
-  if (!home.mls_number) return res.status(400).json({ error: 'MLS number not set for this listing' });
+  if (!home.mls_number && !home.address) return res.status(400).json({ error: 'MLS number or address required for this listing' });
 
+  const identifier = home.mls_number || home.address;
   const syncLog = db.prepare(
     'INSERT INTO mls_sync_log (listing_number, home_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)'
-  ).run(home.mls_number, home.id, home.price, home.price, 'pending');
+  ).run(identifier, home.id, home.price, home.price, 'pending');
   const syncLogId = syncLog.lastInsertRowid;
 
-  updateMLSPrice(home.mls_number, home.price).then(result => {
+  // Pass both MLS number (if available) and address as fallback
+  updateMLSPrice(home.mls_number, home.price, home.address).then(result => {
     db.prepare('UPDATE mls_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
       .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, syncLogId);
     db.save();
@@ -459,7 +461,7 @@ app.post('/api/mls/sync/:homeId', auth, (req, res) => {
     db.save();
   });
 
-  res.json({ ok: true, message: `MLS sync started for listing ${home.mls_number}`, syncLogId });
+  res.json({ ok: true, message: `MLS sync started for listing ${identifier}`, syncLogId });
 });
 
 // Unified sync — push one plan to all platforms at once

@@ -44,9 +44,9 @@ async function login(page) {
 }
 
 /**
- * Navigate to listings page and find specific listing by MLS number
+ * Navigate to listings page and find specific listing by MLS number or address
  */
-async function navigateToListing(page, mlsNumber) {
+async function navigateToListing(page, mlsNumber, address = null) {
   console.log(`🔍 Navigating to listings page...`);
   
   // Go to listings index page
@@ -57,33 +57,49 @@ async function navigateToListing(page, mlsNumber) {
   
   await page.waitForTimeout(2000);
   
-  console.log(`🔍 Finding listing ${mlsNumber}...`);
+  const searchTerm = mlsNumber || address;
+  console.log(`🔍 Finding listing by ${mlsNumber ? 'MLS #' : 'address'}: ${searchTerm}...`);
   
-  // Try to find the listing in the table by MLS number
-  // The listing might be in a row with the MLS number visible
-  const rowSelectors = [
-    `tr:has-text("${mlsNumber}")`,
-    `tr:contains("${mlsNumber}")`,
-    `[data-mls="${mlsNumber}"]`,
-  ];
+  // Normalize address for matching (remove apartment numbers, extra spaces, etc.)
+  const normalizeAddress = (addr) => {
+    return addr
+      .toLowerCase()
+      .replace(/\s*#\d+.*$/, '') // Remove "#7" type apartment numbers
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
   
-  // Try to find and click the Edit button for this MLS number
-  const found = await page.evaluate((mls) => {
+  // Try to find and click the Edit button for this listing
+  const found = await page.evaluate((mls, addr) => {
+    const normalizeAddr = (a) => {
+      return a.toLowerCase().replace(/\s*#\d+.*$/, '').replace(/\s+/g, ' ').trim();
+    };
+    
     // Find all rows in the table
     const rows = document.querySelectorAll('tr, .listing-row');
     for (const row of rows) {
-      // Check if this row contains the MLS number
-      if (row.textContent.includes(mls)) {
-        // Find the edit button in this row
-        const editBtn = row.querySelector('a[href*="edit"], button:contains("Edit"), .edit-button, a:contains("Edit")');
-        if (editBtn) {
+      const text = row.textContent;
+      
+      // Try to match by MLS number first (more reliable)
+      if (mls && text.includes(mls)) {
+        const editBtn = row.querySelector('a[href*="edit"], button, a');
+        if (editBtn && (editBtn.textContent.toLowerCase().includes('edit') || editBtn.href?.includes('edit'))) {
+          editBtn.click();
+          return true;
+        }
+      }
+      
+      // Fall back to address matching if MLS not found
+      if (addr && normalizeAddr(text).includes(normalizeAddr(addr))) {
+        const editBtn = row.querySelector('a[href*="edit"], button, a');
+        if (editBtn && (editBtn.textContent.toLowerCase().includes('edit') || editBtn.href?.includes('edit'))) {
           editBtn.click();
           return true;
         }
       }
     }
     return false;
-  }, mlsNumber);
+  }, mlsNumber, address);
   
   if (found) {
     await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
@@ -91,7 +107,7 @@ async function navigateToListing(page, mlsNumber) {
     return true;
   }
   
-  throw new Error(`Could not find listing ${mlsNumber} on listings page`);
+  throw new Error(`Could not find listing ${mlsNumber || address} on listings page`);
 }
 
 /**
@@ -154,16 +170,17 @@ async function updatePrice(page, newPrice) {
 
 /**
  * Main function: Update an MLS listing price
- * @param {string} mlsNumber - MLS listing number
+ * @param {string} mlsNumber - MLS listing number (optional if address provided)
  * @param {number} newPrice - New listing price
+ * @param {string} address - Listing address (optional, used if MLS number not provided)
  * @returns {Promise<{success: boolean, message: string}>}
  */
-async function updateListingPrice(mlsNumber, newPrice) {
+async function updateListingPrice(mlsNumber, newPrice, address = null) {
   let browser;
   
   try {
-    if (!mlsNumber) {
-      throw new Error('MLS number is required');
+    if (!mlsNumber && !address) {
+      throw new Error('MLS number or address is required');
     }
     
     browser = await launchBrowser();
@@ -176,7 +193,7 @@ async function updateListingPrice(mlsNumber, newPrice) {
     });
     
     await login(page);
-    await navigateToListing(page, mlsNumber);
+    await navigateToListing(page, mlsNumber, address);
     await updatePrice(page, newPrice);
     
     await browser.close();

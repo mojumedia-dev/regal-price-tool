@@ -450,7 +450,7 @@ async function loadAvailableHomes(cid) {
         <td><input class="field-input" type="text" value="${d.est_move_in}" data-type="available-homes" data-id="${d.id}" data-field="est_move_in" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
         <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncAvailableHome(${d.id}, '${d.plan_name.replace(/'/g, "\\'")}', this)">🔄 Sync</button></td>
-        <td class="sync-cell"><button class="btn-sync" onclick="syncMLSListing(${d.id}, this)" ${!d.mls_number ? 'disabled title="Set MLS # first"' : ''}>🏠 MLS</button></td>
+        <td class="sync-cell"><button class="btn-sync" onclick="syncMLSListing(${d.id}, this)" ${!d.mls_number && !d.address ? 'disabled title="Address required"' : ''} title="${d.mls_number ? 'Sync by MLS #' : 'Sync by address'}">🏠 MLS</button></td>
       </tr>`).join('')}</tbody>
     </table>
     ${actionsHTML('available-homes')}`;
