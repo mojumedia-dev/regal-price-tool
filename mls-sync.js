@@ -44,45 +44,54 @@ async function login(page) {
 }
 
 /**
- * Navigate to a specific listing by MLS number
+ * Navigate to listings page and find specific listing by MLS number
  */
 async function navigateToListing(page, mlsNumber) {
-  console.log(`🔍 Searching for listing ${mlsNumber}...`);
+  console.log(`🔍 Navigating to listings page...`);
   
-  // Try to find the listing - this will depend on the portal's structure
-  // Common approaches:
-  // 1. Search by MLS number
-  // 2. Navigate to "My Listings" and find it
-  // 3. Direct URL if predictable
+  // Go to listings index page
+  await page.goto('https://www.utahrealestate.com/lip/index/', { 
+    waitUntil: 'networkidle2', 
+    timeout: 60000 
+  });
   
-  // For now, let's try a search approach
-  const searchSelector = 'input[type="search"], input[placeholder*="search" i], input[name="search"]';
-  await page.waitForSelector(searchSelector, { timeout: 10000 });
-  await page.type(searchSelector, mlsNumber);
-  await page.keyboard.press('Enter');
-  
-  // Wait for results
   await page.waitForTimeout(2000);
   
-  // Click the listing or edit button
-  const editSelectors = [
-    `a[href*="${mlsNumber}"]`,
-    `button:has-text("Edit")`,
-    `.edit-button`,
+  console.log(`🔍 Finding listing ${mlsNumber}...`);
+  
+  // Try to find the listing in the table by MLS number
+  // The listing might be in a row with the MLS number visible
+  const rowSelectors = [
+    `tr:has-text("${mlsNumber}")`,
+    `tr:contains("${mlsNumber}")`,
+    `[data-mls="${mlsNumber}"]`,
   ];
   
-  for (const selector of editSelectors) {
-    try {
-      await page.waitForSelector(selector, { timeout: 3000 });
-      await page.click(selector);
-      console.log('✅ Navigated to listing');
-      return true;
-    } catch {
-      continue;
+  // Try to find and click the Edit button for this MLS number
+  const found = await page.evaluate((mls) => {
+    // Find all rows in the table
+    const rows = document.querySelectorAll('tr, .listing-row');
+    for (const row of rows) {
+      // Check if this row contains the MLS number
+      if (row.textContent.includes(mls)) {
+        // Find the edit button in this row
+        const editBtn = row.querySelector('a[href*="edit"], button:contains("Edit"), .edit-button, a:contains("Edit")');
+        if (editBtn) {
+          editBtn.click();
+          return true;
+        }
+      }
     }
+    return false;
+  }, mlsNumber);
+  
+  if (found) {
+    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 });
+    console.log('✅ Navigated to listing edit page');
+    return true;
   }
   
-  throw new Error(`Could not find listing ${mlsNumber}`);
+  throw new Error(`Could not find listing ${mlsNumber} on listings page`);
 }
 
 /**
