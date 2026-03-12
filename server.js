@@ -205,12 +205,15 @@ app.get('/api/audit-log', auth, (req, res) => {
     if (log.entity_type === 'plans') {
       const plan = db.prepare('SELECT name FROM plans WHERE id = ?').get(log.entity_id);
       log.entity_name = plan?.name || `Plan #${log.entity_id}`;
+      log.entity_type_label = 'Base Price';
     } else if (log.entity_type === 'homesites') {
       const hs = db.prepare('SELECT h.lot_number, c.name as community FROM homesites h JOIN communities c ON c.id = h.community_id WHERE h.id = ?').get(log.entity_id);
       log.entity_name = hs ? `${hs.community} Lot ${hs.lot_number}` : `Homesite #${log.entity_id}`;
+      log.entity_type_label = 'Homesite';
     } else if (log.entity_type === 'available-homes') {
       const ah = db.prepare('SELECT ah.plan_name, ah.address, c.name as community FROM available_homes ah JOIN communities c ON c.id = ah.community_id WHERE ah.id = ?').get(log.entity_id);
       log.entity_name = ah ? `${ah.community} - ${ah.plan_name}` : `Home #${log.entity_id}`;
+      log.entity_type_label = 'Inventory Home';
     }
     // Convert SQLite timestamp to ISO format with UTC indicator
     if (log.changed_at) {

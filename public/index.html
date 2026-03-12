@@ -602,14 +602,24 @@ async function showAuditLog() {
     return new Date(dateStr).toLocaleString('en-US', { timeZone: 'America/Denver', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
   }
   
+  function typeBadge(typeLabel) {
+    const badges = {
+      'Base Price': '<span class="badge badge-plan">Base Price</span>',
+      'Homesite': '<span class="badge badge-lot">Homesite</span>',
+      'Inventory Home': '<span class="badge badge-home">Inventory</span>'
+    };
+    return badges[typeLabel] || `<span class="badge">${typeLabel}</span>`;
+  }
+
   content.innerHTML = `
   <h3 style="margin-bottom:12px; color:#6B1D2A;">Price Changes</h3>
   <table class="audit-table">
-    <thead><tr><th>When (MST)</th><th>Who</th><th>Type</th><th>Field</th><th>Old Value</th><th>New Value</th></tr></thead>
+    <thead><tr><th>When (MST)</th><th>Who</th><th>Type</th><th>Item</th><th>Field</th><th>Old Value</th><th>New Value</th></tr></thead>
     <tbody>${logs.map(l => `<tr>
       <td>${formatMST(l.changed_at)}</td>
       <td>${l.user_name}</td>
-      <td>${l.entity_name || ((typeLabels[l.entity_type] || l.entity_type) + ' #' + l.entity_id)}</td>
+      <td>${typeBadge(l.entity_type_label || typeLabels[l.entity_type] || l.entity_type)}</td>
+      <td>${l.entity_name || 'Item #' + l.entity_id}</td>
       <td>${fieldLabels[l.field_name] || l.field_name}</td>
       <td>${formatVal(l.old_value, l.field_name)}</td>
       <td><strong>${formatVal(l.new_value, l.field_name)}</strong></td>
