@@ -24,20 +24,6 @@ async function migrate() {
 
   // Note: homefiniti_spec_id already exists from seed.js, mls_number from previous migration
 
-  // Add Cambridge Lot 300 spec ID
-  const cambridge300 = db.prepare(`
-    SELECT ah.id FROM available_homes ah 
-    JOIN communities c ON c.id = ah.community_id 
-    WHERE c.name LIKE '%Parkside%' 
-    AND ah.plan_name LIKE '%Cambridge%' 
-    AND ah.address LIKE '%300%'
-  `).get();
-  
-  if (cambridge300) {
-    db.prepare('UPDATE available_homes SET homefiniti_spec_id = ? WHERE id = ?').run('1680334', cambridge300.id);
-    console.log('✅ Added Homefiniti spec ID 1680334 to Cambridge Lot 300');
-  }
-
   db.prepare(`INSERT INTO migrations (id) VALUES ('2026-03-12-inventory-ids')`).run();
   console.log('✅ Migration 2026-03-12 complete!');
   db.save();
