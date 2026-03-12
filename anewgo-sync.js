@@ -394,8 +394,7 @@ async function updateLotPremium(communityName, lotNumber, newPremium) {
 }
 
 /**
- * Find ANewGo inventory ID by lot ID
- * Uses the inventories (plural) query which lists all inventory for a client
+ * Find ANewGo inventory ID by querying the lot, which contains inventory info
  */
 async function findInventoryByLotId(token, communityName, lotNumber) {
   const anewgoLotId = getAnewgoLotId(communityName, lotNumber);
@@ -410,42 +409,103 @@ async function findInventoryByLotId(token, communityName, lotNumber) {
     return null;
   }
 
-  console.log(`[ANewGo] Looking for inventory: lotId=${anewgoLotId}, communityId=${communityId}`);
+  console.log(`[ANewGo] Looking for inventory via lot: lotId=${anewgoLotId}, communityId=${communityId}`);
 
-  // Try using inventories (plural) query instead of inventory (singular)
-  const query = `query INVENTORIES_QUERY($clientName: String!) {
-    inventories(clientName: $clientName) { id lotId price communityId }
+  // Query the lot itself, which should include inventory information
+  const query = `query LOT_QUERY($clientName: String!, $lotId: Int!) {
+    lot(clientName: $clientName, lotId: $lotId) {
+      id
+      name
+      premium
+      inventoryId
+      inventory {
+        id
+        price
+        lotId
+        communityId
+      }
+    }
   }`;
 
   const response = await fetch(ANEWGO_GQL_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify({
-      operationName: 'INVENTORIES_QUERY',
-      variables: { clientName: ANEWGO_CLIENT_NAME },
+      operationName: 'LOT_QUERY',
+      variables: { 
+        clientName: ANEWGO_CLIENT_NAME,
+        lotId: anewgoLotId 
+      },
       query,
     }),
   });
 
   const data = await response.json();
-  console.log(`[ANewGo] Inventories query response:`, JSON.stringify(data, null, 2));
+  console.log(`[ANewGo] Lot query response:`, JSON.stringify(data, null, 2));
 
   if (data.errors) {
-    console.error(`[ANewGo] GraphQL error querying inventories:`, JSON.stringify(data.errors));
+    console.error(`[ANewGo] GraphQL error querying lot:`, JSON.stringify(data.errors));
     throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
   }
   
-  const items = data.data?.inventories || [];
-  console.log(`[ANewGo] Found ${items.length} total inventory items`);
-  
-  const match = items.find(i => i.lotId === anewgoLotId && i.communityId === communityId);
-  if (match) {
-    console.log(`[ANewGo] Found matching inventory: id=${match.id}, price=${match.price}`);
-  } else {
-    console.log(`[ANewGo] No inventory match for lotId=${anewgoLotId}, communityId=${communityId}`);
+  const lot = data.data?.lot;
+  if (!lot) {
+    console.log(`[ANewGo] No lot found with ID ${anewgoLotId}`);
+    return null;
   }
-  
-  return match || null;
+
+  console.log(`[ANewGo] Found lot: ${lot.name}, inventoryId=${lot.inventoryId}`);
+
+  // Return inventory data if it exists
+  if (lot.inventory) {
+    console.log(`[ANewGo] Found inventory on lot: id=${lot.inventory.id}, price=${lot.inventory.price}`);
+    return lot.inventory;
+  }
+
+  // If there's an inventoryId but no inventory object, fetch it
+  if (lot.inventoryId) {
+    console.log(`[ANewGo] Lot has inventoryId ${lot.inventoryId}, fetching inventory details...`);
+    return await getInventoryById(token, lot.inventoryId);
+  }
+
+  console.log(`[ANewGo] Lot ${lot.name} has no inventory`);
+  return null;
+}
+
+/**
+ * Get inventory by ID (if we have the ID from the lot query)
+ */
+async function getInventoryById(token, inventoryId) {
+  const query = `query INVENTORY_QUERY($clientName: String!, $inventoryId: Int!) {
+    inventory(clientName: $clientName, inventoryId: $inventoryId) {
+      id
+      price
+      lotId
+      communityId
+    }
+  }`;
+
+  const response = await fetch(ANEWGO_GQL_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({
+      operationName: 'INVENTORY_QUERY',
+      variables: {
+        clientName: ANEWGO_CLIENT_NAME,
+        inventoryId: inventoryId
+      },
+      query,
+    }),
+  });
+
+  const data = await response.json();
+  console.log(`[ANewGo] Inventory by ID response:`, JSON.stringify(data, null, 2));
+
+  if (data.errors) {
+    throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
+  }
+
+  return data.data?.inventory || null;
 }
 
 /**
