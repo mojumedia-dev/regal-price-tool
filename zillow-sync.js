@@ -35,6 +35,7 @@ const PLAN_ID_MAP = {
   'rosewood': 7754417,
   // Parkside
   'balboa': 5069443,
+  'cambridge': 9365910,
   'chatsworth': 5069444,
   'fairmount': 5069445,
   'kensington': 5069446,
