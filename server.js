@@ -17,6 +17,42 @@ const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
 
 // Trigger redeploy - Cambridge spec migration
 
+// TEMPORARY: Admin endpoint to add Cambridge spec ID
+app.get('/admin/add-cambridge-spec-id', (req, res) => {
+  try {
+    const home = db.prepare(`
+      SELECT ah.id, ah.plan_name, ah.address, ah.homefiniti_spec_id, c.name as community 
+      FROM available_homes ah 
+      JOIN communities c ON c.id = ah.community_id 
+      WHERE c.name LIKE '%Parkside%' 
+      AND ah.plan_name LIKE '%Cambridge%' 
+      AND ah.address LIKE '%300%'
+    `).get();
+    
+    if (!home) {
+      return res.json({ success: false, message: 'Cambridge Lot 300 not found in database' });
+    }
+    
+    if (home.homefiniti_spec_id === '1680334') {
+      return res.json({ success: true, message: 'Spec ID already set to 1680334', home });
+    }
+    
+    db.prepare('UPDATE available_homes SET homefiniti_spec_id = ? WHERE id = ?').run('1680334', home.id);
+    db.save();
+    
+    const updated = db.prepare('SELECT homefiniti_spec_id FROM available_homes WHERE id = ?').get(home.id);
+    
+    res.json({ 
+      success: true, 
+      message: `✅ Added spec ID 1680334 to ${home.community} - ${home.plan_name} at ${home.address}`,
+      before: home.homefiniti_spec_id,
+      after: updated.homefiniti_spec_id
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // DB - initialized in startServer()
 let db;
 const dbDir = process.env.DB_DIR || path.join(__dirname, 'db');
