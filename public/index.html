@@ -518,8 +518,8 @@ async function saveAll(tabType) {
         method: 'PUT',
         body: JSON.stringify({ price: change.price }),
       });
-      // Update original value and style
-      const input = document.querySelector(`input[data-type="${change.type}"][data-id="${change.id}"]`);
+      // Update original value and style - must target .price-input specifically!
+      const input = document.querySelector(`input.price-input[data-type="${change.type}"][data-id="${change.id}"]`);
       if (input) {
         input.dataset.original = change.price;
         input.classList.remove('changed');
