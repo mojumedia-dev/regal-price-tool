@@ -449,7 +449,7 @@ async function loadAvailableHomes(cid) {
         <td><input class="field-input short" type="text" value="${d.garage}" data-type="available-homes" data-id="${d.id}" data-field="garage" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.est_move_in}" data-type="available-homes" data-id="${d.id}" data-field="est_move_in" onchange="fieldChanged(this)"></td>
         <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
-        <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncAvailableHome(${d.id}, '${d.plan_name.replace(/'/g, "\\'")}', this)" title="Sync to MLS, Homefiniti, Zillow, ANewGo">🔄 Sync All</button></td>
+        <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncAvailableHome(${d.id}, '${d.plan_name.replace(/'/g, "\\'")}', this)" title="Sync to MLS, Homefiniti, Zillow">🔄 Sync</button></td>
       </tr>`).join('')}</tbody>
     </table>
     ${actionsHTML('available-homes')}`;
@@ -730,21 +730,17 @@ async function syncHomesiteToAnewgo(homesiteId, btn) {
 async function syncAvailableHome(homeId, planName, btn) {
   btn.disabled = true;
   btn.textContent = '⏳ Syncing...';
-  toast(`Syncing ${planName} to MLS, HF, ZL, ANewGo...`, 'info');
+  toast(`Syncing ${planName} to MLS, Homefiniti, Zillow...`, 'info');
   try {
     // Sync plan price to Homefiniti & Zillow
     const planRes = await api(`/api/sync-by-plan-name`, { method: 'POST', body: JSON.stringify({ planName }) });
     const planData = await planRes.json();
     
-    // Sync inventory price to ANewGo (specific home on specific lot)
-    const ahRes = await api(`/api/anewgo/sync-available-home/${homeId}`, { method: 'POST' });
-    const ahData = await ahRes.json();
-    
     // Sync to MLS (specific listing)
     const mlsRes = await api(`/api/mls/sync/${homeId}`, { method: 'POST' });
     const mlsData = await mlsRes.json();
     
-    if (planData.ok || ahData.ok || mlsData.ok) {
+    if (planData.ok || mlsData.ok) {
       toast(`Syncing ${planName} to all platforms...`, 'success');
       pollAllSync(btn);
     } else {
