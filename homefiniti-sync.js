@@ -258,8 +258,91 @@ async function syncMultiplePrices(updates) {
   return results;
 }
 
+/**
+ * Update an inventory home (spec home) price on Homefiniti
+ * Uses /spec/form/ instead of /plan/form/
+ */
+async function updateSpecPrice(specId, newPrice, homeName) {
+  console.log(`[Homefiniti] Syncing inventory home: specId=${specId}, price=$${newPrice}, name="${homeName}"`);
+  
+  let browser;
+  try {
+    browser = await launchBrowser();
+    const page = await browser.newPage();
+
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const type = req.resourceType();
+      if (['image', 'font', 'stylesheet', 'media'].includes(type)) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+
+    await login(page);
+
+    const editUrl = `${HOMEFINITI_URL}/core/dashboard/spec/form/?id=${specId}`;
+    console.log(`[Homefiniti] Navigating to ${editUrl}`);
+    await page.goto(editUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    
+    // Wait for the price field to appear (could be #spec-price or similar)
+    await page.waitForSelector('input[name*="price"], #spec-price, #price', { timeout: 30000 });
+
+    // Find the price field (try common field names)
+    let priceField = await page.$('#spec-price') || await page.$('#price') || await page.$('input[name="price"]') || await page.$('input[name="spec-price"]');
+    if (!priceField) {
+      throw new Error('Price field not found on spec form');
+    }
+
+    const oldPrice = await page.evaluate(el => el.value, priceField).catch(() => '0');
+    console.log(`[Homefiniti] Current spec price: ${oldPrice}`);
+
+    // Clear and set new price
+    await page.evaluate(el => el.value = '', priceField);
+    await priceField.type(String(newPrice));
+
+    // Verify the value was set
+    const setPrice = await page.evaluate(el => el.value, priceField);
+    if (setPrice !== String(newPrice)) {
+      throw new Error(`Failed to set price field. Expected ${newPrice}, got ${setPrice}`);
+    }
+
+    // Click Save
+    console.log(`[Homefiniti] Clicking save button...`);
+    const saveButton = await page.$('button[name="form_save"]');
+    if (!saveButton) {
+      throw new Error('Save button not found on page');
+    }
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
+      saveButton.click(),
+    ]);
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    const finalUrl = page.url();
+    console.log(`[Homefiniti] Final URL after save: ${finalUrl}`);
+
+    console.log(`[Homefiniti] ✅ Updated inventory home ${homeName}: $${oldPrice} -> $${newPrice}`);
+    return {
+      success: true,
+      message: `Updated inventory home ${homeName} on Homefiniti`,
+      oldPrice: parseInt(oldPrice) || 0,
+      newPrice,
+    };
+  } catch (err) {
+    console.error(`[Homefiniti] ❌ Error updating spec ${specId}:`, err.message);
+    return { success: false, message: err.message };
+  } finally {
+    if (browser) await browser.close();
+  }
+}
+
 module.exports = {
   updatePlanPrice,
+  updateSpecPrice,
   syncMultiplePrices,
   getHomefinitiPlanId,
   normalizePlanName,

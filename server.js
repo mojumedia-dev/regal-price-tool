@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
-const { updatePlanPrice, getHomefinitiPlanId, normalizePlanName, PLAN_ID_MAP } = require('./homefiniti-sync');
+const { updatePlanPrice, updateSpecPrice, getHomefinitiPlanId, normalizePlanName, PLAN_ID_MAP } = require('./homefiniti-sync');
 const { updatePlanPrice: updateAnewgoPrice, getAnewgoPlanId, updateLotPremium: updateAnewgoLotPremium, updateInventoryPrice: updateAnewgoInventoryPrice, getAnewgoLotId } = require('./anewgo-sync');
 const { updatePlanPrice: updateZillowPrice, getZillowPlanId } = require('./zillow-sync');
 const { updateListingPrice: updateMLSPrice } = require('./mls-sync');
@@ -508,26 +508,52 @@ app.post('/api/sync-available-home/:homeId', auth, (req, res) => {
 
   const platforms = [];
 
-  function fireSync(platform, table, checkFn, syncFn) {
-    if (!checkFn(home.plan_name)) return;
-    platforms.push(platform);
-    const log = db.prepare(`INSERT INTO ${table} (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)`).run(home.plan_name, home.id, home.price, home.price, 'pending');
+  // Homefiniti - use spec sync if we have homefiniti_spec_id, otherwise use plan sync
+  if (home.homefiniti_spec_id) {
+    platforms.push('Homefiniti');
+    const log = db.prepare('INSERT INTO homefiniti_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(`${home.plan_name} (Inventory)`, home.id, home.price, home.price, 'pending');
     const logId = log.lastInsertRowid;
-    // Use the AVAILABLE HOME's price, not the base plan price
-    syncFn(home.plan_name, home.price).then(result => {
-      db.prepare(`UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`)
+    updateSpecPrice(parseInt(home.homefiniti_spec_id), home.price, `${home.plan_name} - ${home.address}`).then(result => {
+      db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
       db.save();
     }).catch(err => {
-      db.prepare(`UPDATE ${table} SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?`)
+      db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run('failed', err.message, logId);
+      db.save();
+    });
+  } else if (getHomefinitiPlanId(home.plan_name)) {
+    // Fallback to plan sync if no spec_id (will update plan price with inventory price - not ideal)
+    console.warn(`[Sync] Warning: No homefiniti_spec_id for available home ${home.id}, syncing to plan instead`);
+    platforms.push('Homefiniti');
+    const log = db.prepare('INSERT INTO homefiniti_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(home.plan_name, home.id, home.price, home.price, 'pending');
+    const logId = log.lastInsertRowid;
+    updatePlanPrice(home.plan_name, home.price).then(result => {
+      db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+      db.save();
+    }).catch(err => {
+      db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run('failed', err.message, logId);
       db.save();
     });
   }
 
-  // Available Homes → Zillow + Homefiniti (with inventory home price)
-  fireSync('Homefiniti', 'homefiniti_sync_log', getHomefinitiPlanId, updatePlanPrice);
-  fireSync('Zillow', 'zillow_sync_log', getZillowPlanId, updateZillowPrice);
+  // Zillow - use plan sync (we don't have inventory listing IDs yet)
+  if (getZillowPlanId(home.plan_name)) {
+    platforms.push('Zillow');
+    const log = db.prepare('INSERT INTO zillow_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(home.plan_name, home.id, home.price, home.price, 'pending');
+    const logId = log.lastInsertRowid;
+    updateZillowPrice(home.plan_name, home.price).then(result => {
+      db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+      db.save();
+    }).catch(err => {
+      db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run('failed', err.message, logId);
+      db.save();
+    });
+  }
 
   if (!platforms.length) return res.status(400).json({ error: `Plan "${home.plan_name}" not mapped to Homefiniti or Zillow` });
 
