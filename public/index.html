@@ -470,7 +470,7 @@ async function loadAvailableHomes(cid) {
         <td><input class="field-input short" type="text" value="${d.baths}" data-type="available-homes" data-id="${d.id}" data-field="baths" onchange="fieldChanged(this)"></td>
         <td><input class="field-input short" type="text" value="${d.garage}" data-type="available-homes" data-id="${d.id}" data-field="garage" onchange="fieldChanged(this)"></td>
         <td><input class="field-input" type="text" value="${d.est_move_in}" data-type="available-homes" data-id="${d.id}" data-field="est_move_in" onchange="fieldChanged(this)"></td>
-        <td style="text-align:center"><input class="price-input" type="text" value="${formatPrice(d.price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.price}" onchange="priceChanged(this)" onfocus="this.select()"></td>
+        <td style="text-align:center"><input class="price-input${d.price !== d.display_price ? ' changed' : ''}" type="text" value="${formatPrice(d.display_price)}" data-type="available-homes" data-id="${d.id}" data-original="${d.display_price}" data-db-price="${d.price}" onchange="priceChanged(this)" onfocus="this.select()" title="${d.price !== d.display_price ? `Unsync ed: DB has $${formatPrice(d.price)}` : ''}"></td>
         <td class="sync-cell">${ahBadgeHTML(d.plan_name)}<button class="btn-sync" onclick="syncAvailableHome(${d.id}, '${d.plan_name.replace(/'/g, "\\'")}', this)" title="Sync to Homefiniti spec & MLS (Zillow updates via MLS feed)">🔄 Sync</button></td>
       </tr>`).join('')}</tbody>
     </table>

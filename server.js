@@ -168,7 +168,7 @@ app.get('/api/communities/:id/homesites', auth, (req, res) => {
 
 // Available Homes
 app.get('/api/communities/:id/available-homes', auth, (req, res) => {
-  const homes = db.prepare('SELECT * FROM available_homes WHERE community_id = ? ORDER BY sort_order').all(req.params.id);
+  const homes = db.prepare('SELECT *, COALESCE(last_synced_price, price) as display_price FROM available_homes WHERE community_id = ? ORDER BY sort_order').all(req.params.id);
   res.json(homes);
 });
 
@@ -213,7 +213,7 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
   const config = tableMap[type];
   if (!config) return res.status(400).json({ error: 'Invalid type' });
   
-  const current = db.prepare(`SELECT ${config.field} as price FROM ${config.table} WHERE id = ?`).get(id);
+  const current = db.prepare(`SELECT ${config.field} as price, last_synced_price FROM ${config.table} WHERE id = ?`).get(id);
   if (!current) return res.status(404).json({ error: 'Not found' });
   
   // Log change
@@ -225,7 +225,7 @@ app.put('/api/:type/:id/price', auth, (req, res) => {
   db.prepare(`UPDATE ${config.table} SET ${config.field} = ? WHERE id = ?`).run(price, id);
   
   db.save();
-  res.json({ ok: true, old: current.price, new: price });
+  res.json({ ok: true, old: current.price, new: price, last_synced: current.last_synced_price });
 });
 
 // Audit log
@@ -554,6 +554,10 @@ app.post('/api/sync-available-home/:homeId', auth, (req, res) => {
     updateSpecPrice(parseInt(home.homefiniti_spec_id), home.price, `${home.plan_name} - ${home.address}`).then(result => {
       db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
+      // Update last_synced_price on successful sync
+      if (result.success) {
+        db.prepare('UPDATE available_homes SET last_synced_price = ? WHERE id = ?').run(home.price, home.id);
+      }
       db.save();
     }).catch(err => {
       db.prepare('UPDATE homefiniti_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
@@ -771,6 +775,7 @@ async function startServer() {
   try { require('./migrate-2026-03-12-inventory-ids')(db); } catch(e) { console.error('Migration error:', e.message); }
   try { require('./migrate-2026-03-12-cambridge-spec')(db); } catch(e) { console.error('Migration error:', e.message); }
   try { require('./migrate-2026-03-12-all-spec-ids')(db); } catch(e) { console.error('Migration error:', e.message); }
+  try { require('./migrate-2026-03-12-last-synced-price')(db); } catch(e) { console.error('Migration error:', e.message); }
 
   // Create sync log tables
   db.exec(`
