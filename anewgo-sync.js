@@ -395,25 +395,57 @@ async function updateLotPremium(communityName, lotNumber, newPremium) {
 
 /**
  * Find ANewGo inventory ID by lot ID
+ * Uses the inventories (plural) query which lists all inventory for a client
  */
 async function findInventoryByLotId(token, communityName, lotNumber) {
   const anewgoLotId = getAnewgoLotId(communityName, lotNumber);
-  if (!anewgoLotId) return null;
+  if (!anewgoLotId) {
+    console.log(`[ANewGo] No lot ID mapping for ${communityName} lot ${lotNumber}`);
+    return null;
+  }
 
   const communityId = COMMUNITY_ID_MAP[communityName.toLowerCase()];
-  if (!communityId) return null;
+  if (!communityId) {
+    console.log(`[ANewGo] No community ID mapping for ${communityName}`);
+    return null;
+  }
 
-  const query = `query { inventory(clientName: "${ANEWGO_CLIENT_NAME}", communityId: ${communityId}) { id lotId price } }`;
+  console.log(`[ANewGo] Looking for inventory: lotId=${anewgoLotId}, communityId=${communityId}`);
+
+  // Try using inventories (plural) query instead of inventory (singular)
+  const query = `query INVENTORIES_QUERY($clientName: String!) {
+    inventories(clientName: $clientName) { id lotId price communityId }
+  }`;
+
   const response = await fetch(ANEWGO_GQL_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({
+      operationName: 'INVENTORIES_QUERY',
+      variables: { clientName: ANEWGO_CLIENT_NAME },
+      query,
+    }),
   });
+
   const data = await response.json();
-  if (data.errors) throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
+  console.log(`[ANewGo] Inventories query response:`, JSON.stringify(data, null, 2));
+
+  if (data.errors) {
+    console.error(`[ANewGo] GraphQL error querying inventories:`, JSON.stringify(data.errors));
+    throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
+  }
   
-  const items = data.data?.inventory || [];
-  return items.find(i => i.lotId === anewgoLotId) || null;
+  const items = data.data?.inventories || [];
+  console.log(`[ANewGo] Found ${items.length} total inventory items`);
+  
+  const match = items.find(i => i.lotId === anewgoLotId && i.communityId === communityId);
+  if (match) {
+    console.log(`[ANewGo] Found matching inventory: id=${match.id}, price=${match.price}`);
+  } else {
+    console.log(`[ANewGo] No inventory match for lotId=${anewgoLotId}, communityId=${communityId}`);
+  }
+  
+  return match || null;
 }
 
 /**
