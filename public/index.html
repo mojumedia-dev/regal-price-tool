@@ -369,13 +369,24 @@ async function loadBasePrices(cid) {
 
   function combinedBadgeHTML(hf, an, zl) {
     const status = combinedSyncStatus(hf, an, zl);
-    const labels = { synced: '✅ Synced', failed: '❌ Failed', pending: '⏳ Syncing', partial: '⚠️ Partial', none: '—' };
+    
+    // Only show badges for failures, pending, or partial - hide successful syncs
+    if (status === 'synced' || status === 'none') {
+      return '';
+    }
+    
+    const labels = { failed: '❌ Failed', pending: '⏳ Syncing', partial: '⚠️ Partial' };
     const platformDetail = [
       hf ? `HF: ${hf.status}` : 'HF: —',
       an ? `AN: ${an.status}` : 'AN: —',
       zl ? `ZL: ${zl.status}` : 'ZL: —'
     ].join(' · ');
-    return `<span class="sync-badge ${status}" title="${platformDetail}">${labels[status]}</span>
+    
+    // Show error details if available
+    const errorDetails = [hf, an, zl].filter(s => s && s.status === 'failed').map(s => s.error_message).filter(Boolean).join('; ');
+    const fullTitle = errorDetails ? `${platformDetail}\n\nErrors: ${errorDetails}` : platformDetail;
+    
+    return `<span class="sync-badge ${status}" title="${fullTitle}">${labels[status]}</span>
             <div class="sync-detail">${platformDetail}</div>`;
   }
   
@@ -428,10 +439,21 @@ async function loadAvailableHomes(cid) {
 
   function ahBadgeHTML(planName) {
     const status = ahCombinedStatus(planName);
+    
+    // Only show badges for failures, pending, or partial - hide successful syncs
+    if (status === 'synced' || status === 'none') {
+      return '';
+    }
+    
     const hf = ahHfMap[planName], zl = ahZlMap[planName];
     const detail = `HF: ${hf ? hf.status : '—'} · ZL: ${zl ? zl.status : '—'}`;
-    const labels = { synced: '✅', failed: '❌', pending: '⏳', partial: '⚠️', none: '—' };
-    return `<span class="sync-badge ${status}" title="${detail}">${labels[status]}</span>`;
+    const labels = { failed: '❌ Failed', pending: '⏳ Syncing', partial: '⚠️ Partial' };
+    
+    // Show error details if available
+    const errorDetails = [hf, zl].filter(s => s && s.status === 'failed').map(s => s.error_message).filter(Boolean).join('; ');
+    const fullTitle = errorDetails ? `${detail}\n\nErrors: ${errorDetails}` : detail;
+    
+    return `<span class="sync-badge ${status}" title="${fullTitle}">${labels[status]}</span>`;
   }
 
   const el = document.getElementById('tab-available-homes');
