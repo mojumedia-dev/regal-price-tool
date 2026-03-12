@@ -577,23 +577,10 @@ app.post('/api/sync-available-home/:homeId', auth, (req, res) => {
     });
   }
 
-  // Zillow - use plan sync (we don't have inventory listing IDs yet)
-  if (getZillowPlanId(home.plan_name)) {
-    platforms.push('Zillow');
-    const log = db.prepare('INSERT INTO zillow_sync_log (plan_name, plan_id, old_price, new_price, status) VALUES (?, ?, ?, ?, ?)').run(home.plan_name, home.id, home.price, home.price, 'pending');
-    const logId = log.lastInsertRowid;
-    updateZillowPrice(home.plan_name, home.price).then(result => {
-      db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run(result.success ? 'synced' : 'failed', result.success ? null : result.message, logId);
-      db.save();
-    }).catch(err => {
-      db.prepare('UPDATE zillow_sync_log SET status = ?, error_message = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run('failed', err.message, logId);
-      db.save();
-    });
-  }
+  // Note: Zillow inventory listings come from MLS feed automatically (ListingConnect)
+  // So we don't sync available homes directly to Zillow plans - that would overwrite the base price
 
-  if (!platforms.length) return res.status(400).json({ error: `Plan "${home.plan_name}" not mapped to Homefiniti or Zillow` });
+  if (!platforms.length) return res.status(400).json({ error: `Plan "${home.plan_name}" not mapped to Homefiniti` });
 
   db.save();
   res.json({ ok: true, message: `Sync started for ${home.plan_name} (available home)`, platforms, homeId: home.id });
