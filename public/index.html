@@ -650,15 +650,53 @@ async function showAuditLog() {
   ${syncLogs.length ? `
   <h3 style="margin: 24px 0 12px; color:#6B1D2A;">Platform Sync History</h3>
   <table class="audit-table">
-    <thead><tr><th>When (MST)</th><th>Platform</th><th>Plan</th><th>Price</th><th>Status</th><th>Details</th></tr></thead>
-    <tbody>${syncLogs.map(s => `<tr>
-      <td>${formatMST(s.created_at)}</td>
-      <td><strong>${s.platform}</strong></td>
-      <td>${s.plan_name}</td>
-      <td>${formatPrice(s.new_price)}</td>
-      <td><span class="sync-badge ${s.status}">${s.status === 'synced' ? '✅ Success' : s.status === 'failed' ? '❌ Failed' : s.status}</span></td>
-      <td style="font-size:11px; color:#888;">${s.error_message || (s.status === 'synced' ? 'Pushed successfully' : '—')}</td>
-    </tr>`).join('')}</tbody>
+    <thead><tr><th>When (MST)</th><th>Plan</th><th>Price</th><th>Platforms</th><th>Details</th></tr></thead>
+    <tbody>${(() => {
+      // Group syncs by plan_name and approximate time (within 2 minutes)
+      const grouped = [];
+      const processed = new Set();
+      
+      syncLogs.forEach((s, idx) => {
+        if (processed.has(idx)) return;
+        
+        const group = {
+          time: s.created_at,
+          plan: s.plan_name,
+          price: s.new_price,
+          platforms: [{ platform: s.platform, status: s.status, error: s.error_message }]
+        };
+        
+        // Find related syncs (same plan, within 2 minutes)
+        const sTime = new Date(s.created_at).getTime();
+        syncLogs.forEach((other, otherIdx) => {
+          if (otherIdx === idx || processed.has(otherIdx)) return;
+          const oTime = new Date(other.created_at).getTime();
+          if (other.plan_name === s.plan_name && Math.abs(sTime - oTime) < 120000 && other.new_price === s.new_price) {
+            group.platforms.push({ platform: other.platform, status: other.status, error: other.error_message });
+            processed.add(otherIdx);
+          }
+        });
+        
+        processed.add(idx);
+        grouped.push(group);
+      });
+      
+      return grouped.map(g => {
+        const platformStatus = g.platforms.map(p => 
+          `<strong>${p.platform}:</strong> ${p.status === 'synced' ? '✅' : p.status === 'failed' ? '❌' : '⏳'}`
+        ).join(' · ');
+        
+        const errors = g.platforms.filter(p => p.error).map(p => `${p.platform}: ${p.error}`).join('; ');
+        
+        return `<tr>
+          <td>${formatMST(g.time)}</td>
+          <td>${g.plan}</td>
+          <td>${formatPrice(g.price)}</td>
+          <td style="font-size:11px;">${platformStatus}</td>
+          <td style="font-size:11px; color:#888;">${errors || (g.platforms.every(p => p.status === 'synced') ? 'All pushed successfully' : '—')}</td>
+        </tr>`;
+      }).join('');
+    })()}</tbody>
   </table>` : ''}`;
 }
 
