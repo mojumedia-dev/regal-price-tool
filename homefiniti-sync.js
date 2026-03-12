@@ -84,14 +84,18 @@ async function login(page) {
  * Uses Puppeteer with domcontentloaded (faster than networkidle2)
  */
 async function updatePlanPrice(planName, newPrice) {
+  console.log(`[Homefiniti] Sync requested for plan: "${planName}" with price: $${newPrice}`);
+  
   const homefinitiId = getHomefinitiPlanId(planName);
   if (!homefinitiId) {
+    console.log(`[Homefiniti] ❌ No mapping found for "${planName}"`);
     return {
       success: false,
       message: `No Homefiniti ID found for plan "${planName}". Known plans: ${Object.keys(PLAN_ID_MAP).join(', ')}`,
     };
   }
 
+  console.log(`[Homefiniti] Plan "${planName}" mapped to ID ${homefinitiId}`);
   let browser;
   try {
     browser = await launchBrowser();
@@ -125,12 +129,31 @@ async function updatePlanPrice(planName, newPrice) {
     await page.$eval('#plan-base_price', el => el.value = '');
     await page.type('#plan-base_price', String(newPrice));
 
-    // Click Save and wait
+    // Verify the value was set
+    const setPrice = await page.$eval('#plan-base_price', el => el.value);
+    if (setPrice !== String(newPrice)) {
+      throw new Error(`Failed to set price field. Expected ${newPrice}, got ${setPrice}`);
+    }
+
+    // Click Save and wait for navigation
+    console.log(`[Homefiniti] Clicking save button...`);
+    const saveButton = await page.$('button[name="form_save"]');
+    if (!saveButton) {
+      throw new Error('Save button not found on page');
+    }
+
     await Promise.all([
-      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {}),
-      page.click('button[name="form_save"]'),
+      page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
+      saveButton.click(),
     ]);
-    await new Promise(r => setTimeout(r, 3000));
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    // Verify we're not on an error page
+    const pageContent = await page.content();
+    if (pageContent.includes('error') || pageContent.includes('Error') || page.url().includes('error')) {
+      throw new Error('Save appeared to fail - error detected on page');
+    }
 
     console.log(`[Homefiniti] ✅ Updated ${currentName} price: $${oldPrice} -> $${newPrice}`);
     return {
@@ -187,11 +210,22 @@ async function syncMultiplePrices(updates) {
         await page.$eval('#plan-base_price', el => el.value = '');
         await page.type('#plan-base_price', String(price));
 
+        // Verify the value was set
+        const setPrice = await page.$eval('#plan-base_price', el => el.value);
+        if (setPrice !== String(price)) {
+          throw new Error(`Failed to set price field. Expected ${price}, got ${setPrice}`);
+        }
+
+        const saveButton = await page.$('button[name="form_save"]');
+        if (!saveButton) {
+          throw new Error('Save button not found');
+        }
+
         await Promise.all([
-          page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {}),
-          page.click('button[name="form_save"]'),
+          page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 60000 }),
+          saveButton.click(),
         ]);
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise(r => setTimeout(r, 2000));
 
         console.log(`[Homefiniti] ✅ ${planName}: $${oldPrice} -> $${price}`);
         results.push({ planName, success: true, oldPrice: parseInt(oldPrice), newPrice: price });
