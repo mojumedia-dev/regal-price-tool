@@ -420,20 +420,36 @@ async function findInventoryByLotId(token, communityName, lotNumber) {
  * Update an inventory home's price via GraphQL mutation
  */
 async function updateInventoryPrice(communityName, lotNumber, newPrice) {
+  console.log(`[ANewGo] updateInventoryPrice called: community="${communityName}", lot=${lotNumber}, price=$${newPrice}`);
+  
   try {
     const token = await getAuthToken();
     const inv = await findInventoryByLotId(token, communityName, lotNumber);
     
     if (!inv) {
+      console.log(`[ANewGo] ❌ No inventory found for ${communityName} lot ${lotNumber}`);
       return {
         success: false,
         message: `No ANewGo inventory found for "${communityName}" lot ${lotNumber}`,
       };
     }
 
+    console.log(`[ANewGo] Found inventory: id=${inv.id}, current price=$${inv.price}, lotId=${inv.lotId}`);
+
     const mutation = `mutation UPDATE_INVENTORY($clientName: String!, $inventory: UpdateInventoryInput!) {
       updateInventory(clientName: $clientName, inventory: $inventory) { id price }
     }`;
+
+    const requestBody = {
+      operationName: 'UPDATE_INVENTORY',
+      variables: {
+        clientName: ANEWGO_CLIENT_NAME,
+        inventory: { id: inv.id, price: newPrice },
+      },
+      query: mutation,
+    };
+
+    console.log(`[ANewGo] Sending GraphQL request:`, JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(ANEWGO_GQL_URL, {
       method: 'POST',
@@ -441,17 +457,12 @@ async function updateInventoryPrice(communityName, lotNumber, newPrice) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        operationName: 'UPDATE_INVENTORY',
-        variables: {
-          clientName: ANEWGO_CLIENT_NAME,
-          inventory: { id: inv.id, price: newPrice },
-        },
-        query: mutation,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
+    console.log(`[ANewGo] GraphQL response:`, JSON.stringify(data, null, 2));
+
     if (data.errors) {
       throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
     }
