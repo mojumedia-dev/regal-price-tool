@@ -15,6 +15,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
 
+// Trigger redeploy - Cambridge spec migration
+
 // DB - initialized in startServer()
 let db;
 const dbDir = process.env.DB_DIR || path.join(__dirname, 'db');
