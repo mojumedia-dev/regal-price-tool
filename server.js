@@ -783,6 +783,7 @@ async function startServer() {
   try { require('./migrate-2026-03-09-mls')(db); } catch(e) { console.error('Migration error:', e.message); }
   try { require('./migrate-2026-03-12-inventory-ids')(db); } catch(e) { console.error('Migration error:', e.message); }
   try { require('./migrate-2026-03-12-cambridge-spec')(db); } catch(e) { console.error('Migration error:', e.message); }
+  try { require('./migrate-2026-03-12-all-spec-ids')(db); } catch(e) { console.error('Migration error:', e.message); }
 
   // Create sync log tables
   db.exec(`
