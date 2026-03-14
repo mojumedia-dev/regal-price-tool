@@ -1,5 +1,27 @@
+# Dependencies
 node_modules/
+
+# Database
 db/regal.db
-generated-pdfs/
 db/regal.db-shm
 db/regal.db-wal
+
+# Generated Files
+generated-pdfs/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
