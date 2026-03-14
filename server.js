@@ -13,45 +13,17 @@ const { updateListingPrice: updateMLSPrice } = require('./mls-sync');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'regal-homes-secret-2026';
 
-// Trigger redeploy - Cambridge spec migration
+// JWT Secret - REQUIRED (no fallback for security)
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌ FATAL: JWT_SECRET environment variable not set');
+  console.error('Set JWT_SECRET in your .env file or environment variables');
+  process.exit(1);
+}
 
-// TEMPORARY: Admin endpoint to add Cambridge spec ID
-app.get('/admin/add-cambridge-spec-id', (req, res) => {
-  try {
-    const home = db.prepare(`
-      SELECT ah.id, ah.plan_name, ah.address, ah.homefiniti_spec_id, c.name as community 
-      FROM available_homes ah 
-      JOIN communities c ON c.id = ah.community_id 
-      WHERE c.name LIKE '%Parkside%' 
-      AND ah.plan_name LIKE '%Cambridge%' 
-      AND ah.address LIKE '%300%'
-    `).get();
-    
-    if (!home) {
-      return res.json({ success: false, message: 'Cambridge Lot 300 not found in database' });
-    }
-    
-    if (home.homefiniti_spec_id === '1680334') {
-      return res.json({ success: true, message: 'Spec ID already set to 1680334', home });
-    }
-    
-    db.prepare('UPDATE available_homes SET homefiniti_spec_id = ? WHERE id = ?').run('1680334', home.id);
-    db.save();
-    
-    const updated = db.prepare('SELECT homefiniti_spec_id FROM available_homes WHERE id = ?').get(home.id);
-    
-    res.json({ 
-      success: true, 
-      message: `✅ Added spec ID 1680334 to ${home.community} - ${home.plan_name} at ${home.address}`,
-      before: home.homefiniti_spec_id,
-      after: updated.homefiniti_spec_id
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
+// REMOVED: Temporary admin endpoint (security risk - unauthenticated database access)
+// Cambridge spec ID migration completed - endpoint no longer needed
 
 // DB - initialized in startServer()
 let db;
