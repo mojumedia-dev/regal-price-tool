@@ -595,32 +595,25 @@ function availableHomesHTML(community, data) {
   `).join('');
 
   return `<!DOCTYPE html><html><head><style>${commonStyles}
-    /* Override for more compact Available Homes */
-    table { margin-top: 4px; font-size: 8px; }
-    thead th { font-size: 7px; padding: 4px 4px; letter-spacing: 0.3px; }
-    thead th:first-child { padding-left: 8px; }
-    tbody td { padding: 4px 4px; font-size: 7.5px; }
-    tbody td:first-child { padding-left: 8px; }
-    .header { margin-bottom: 8px; padding-bottom: 8px; gap: 10px; }
-    .header-text h1 { font-size: 24px; }
-    .header-text .subtitle { font-size: 12px; }
+    /* Tighter table rows for Available Homes to fit more listings */
+    tbody td { padding: 4px 6px; }
     
     .header-row { display: flex; justify-content: space-between; align-items: flex-end; }
-    .community-info { margin-top: 10px; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-style: italic; color: #2D2D2D; margin-bottom: 6px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 6.5px; }
-    .info-section h3 { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 3px; letter-spacing: 0.3px; }
-    .info-section p, .info-section li { font-size: 6.5px; line-height: 1.2; color: #444; }
-    .info-section ul { list-style: disc; padding-left: 10px; margin: 0; }
-    .warranty-section { margin-top: 4px; }
-    .sales-manager { margin-top: 4px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 8px; font-style: italic; color: #2D2D2D; margin-bottom: 2px; }
-    .sales-manager p { font-size: 6.5px; color: #666; line-height: 1.2; }
-    .sales-manager .phone { font-size: 9px; font-weight: 300; color: #2D2D2D; }
-    .sales-manager .email { font-size: 6.5px; color: #444; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 0.5px 0; font-size: 6.5px; }
-    .tax-row { display: flex; justify-content: space-between; padding: 0.5px 0; font-size: 6.5px; }
-    .school-section p { font-size: 6.5px; color: #444; line-height: 1.2; }
+    .community-info { margin-top: 12px; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 7.5px; }
+    .info-section h3 { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: 7.5px; line-height: 1.3; color: #444; }
+    .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
+    .warranty-section { margin-top: 6px; }
+    .sales-manager { margin-top: 6px; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 10px; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: 7.5px; color: #666; line-height: 1.3; }
+    .sales-manager .phone { font-size: 11px; font-weight: 300; color: #2D2D2D; }
+    .sales-manager .email { font-size: 7.5px; color: #444; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: 7.5px; }
+    .tax-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 7.5px; }
+    .school-section p { font-size: 7.5px; color: #444; line-height: 1.3; }
   </style></head><body>
     <div class="page">
       <div class="header">
