@@ -701,9 +701,18 @@ async function generatePDF(type, community, data, outputPath) {
   else if (type === 'available-homes') html = availableHomesHTML(community, data);
   else throw new Error('Invalid PDF type: ' + type);
 
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({ 
+    headless: true, 
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+  });
   const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'networkidle0' });
+  
+  // Set timeout to 30 seconds
+  page.setDefaultTimeout(30000);
+  
+  // Use domcontentloaded instead of networkidle0 for faster, more reliable loading
+  await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  
   await page.pdf({
     path: outputPath,
     format: 'Letter',
