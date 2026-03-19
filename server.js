@@ -702,7 +702,8 @@ app.post('/api/communities/:id/generate-pdf/:type', auth, async (req, res) => {
 
     const outputDir = path.join(__dirname, 'generated-pdfs', community.slug);
     fs.mkdirSync(outputDir, { recursive: true });
-    const filename = `${community.name}-${pdfType}-${new Date().toISOString().slice(0,10)}.pdf`;
+    const dateStr = new Date().toISOString().slice(0,10);
+    const filename = `${community.slug}_${pdfType}-${dateStr}.pdf`;
     const outputPath = path.join(outputDir, filename);
 
     await generatePDF(pdfType, community, data, outputPath);
