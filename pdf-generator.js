@@ -373,6 +373,16 @@ function homesitesHTML(community, data) {
   const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
   const info = getCommunityInfo(community.slug);
 
+  // Dynamic scaling based on row count
+  const rowCount = data.length;
+  const scale = rowCount <= 8 ? 'normal' : rowCount <= 12 ? 'compact' : 'dense';
+  
+  const scaling = {
+    normal: { tablePad: '6px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '18px', infoFont: '7.5px', infoH3: '8px' },
+    compact: { tablePad: '5px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '16px', infoFont: '7px', infoH3: '7.5px' },
+    dense: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '10px', communityH2: '14px', infoFont: '6.5px', infoH3: '7px' }
+  }[scale];
+
   const rows = data.map(d => `
     <tr>
       <td style="text-align:center; padding-left:8px;">${d.lot_number}</td>
@@ -384,20 +394,24 @@ function homesitesHTML(community, data) {
   `).join('');
 
   return `<!DOCTYPE html><html><head><style>${commonStyles}
-    .community-info { margin-top: 16px; page-break-inside: avoid; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 7.5px; }
-    .info-section h3 { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: 7.5px; line-height: 1.3; color: #444; }
+    /* Dynamic scaling */
+    tbody td { padding: ${scaling.tablePad}; font-size: ${scaling.tableFont}; }
+    thead th { font-size: ${scaling.headerFont}; padding: ${scaling.tablePad}; }
+    
+    .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: ${scaling.infoFont}; }
+    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: 1.3; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
     .sales-office { margin-top: 6px; }
-    .sales-office h3 { font-size: 8px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sales-office p { font-size: 7.5px; color: #444; line-height: 1.3; }
+    .sales-office h3 { font-size: ${scaling.infoH3}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
     .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 10px; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: 7.5px; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: 11px; font-weight: 300; color: #2D2D2D; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: 7.5px; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '10px' : '9px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '11px' : '10px'}; font-weight: 300; color: #2D2D2D; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
   </style></head><body>
     <div class="page">
       <div class="header">
@@ -469,8 +483,17 @@ function basePricesHTML(community, data) {
   const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
   const info = getCommunityInfo(community.slug);
   
-  const compact = data.length > 10;
-  const rowPad = compact ? '4px 6px' : '8px';
+  // Dynamic scaling based on row count
+  const rowCount = data.length;
+  const scale = rowCount <= 6 ? 'normal' : rowCount <= 10 ? 'compact' : 'dense';
+  
+  const scaling = {
+    normal: { tablePad: '6px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '18px', infoFont: '7.5px', infoH3: '8px' },
+    compact: { tablePad: '5px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '16px', infoFont: '7px', infoH3: '7.5px' },
+    dense: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '10px', communityH2: '14px', infoFont: '6.5px', infoH3: '7px' }
+  }[scale];
+
+  const rowPad = scaling.tablePad;
   const rows = data.map(d => `
     <tr>
       <td style="padding:${rowPad};">${d.name}</td>
@@ -485,27 +508,26 @@ function basePricesHTML(community, data) {
   `).join('');
 
   return `<!DOCTYPE html><html><head><style>${commonStyles}
-    ${compact ? `
-      table { font-size: 9px; } 
-      thead th { font-size: 7.5px; padding: 5px 4px; }
-      .header { margin-bottom: 12px; padding-bottom: 8px; }
-      .header-text h1 { font-size: 26px; }
-      .page { padding: 0.35in 0.5in 1.0in 0.5in; }
-    ` : ''}
-    .community-info { margin-top: 16px; page-break-inside: avoid; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 7.5px; }
-    .info-section h3 { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: 7.5px; line-height: 1.3; color: #444; }
+    /* Dynamic scaling */
+    table { font-size: ${scaling.tableFont}; }
+    tbody td { font-size: ${scaling.tableFont}; }
+    thead th { font-size: ${scaling.headerFont}; padding: ${scaling.tablePad}; }
+    ${scale !== 'normal' ? `.header { margin-bottom: 10px; padding-bottom: 8px; }` : ''}
+    
+    .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: ${scaling.infoFont}; }
+    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: 1.3; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
     .sales-office { margin-top: 6px; }
-    .sales-office h3 { font-size: 8px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sales-office p { font-size: 7.5px; color: #444; line-height: 1.3; }
+    .sales-office h3 { font-size: ${scaling.infoH3}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
     .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 10px; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: 7.5px; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: 11px; font-weight: 300; color: #2D2D2D; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: 7.5px; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '10px' : '9px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '11px' : '10px'}; font-weight: 300; color: #2D2D2D; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
   </style></head><body>
     <div class="page">
       <div class="header">
@@ -580,6 +602,16 @@ function availableHomesHTML(community, data) {
   const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
   const info = getCommunityInfo(community.slug);
 
+  // Dynamic scaling based on row count (Available Homes typically has more rows)
+  const rowCount = data.length;
+  const scale = rowCount <= 8 ? 'normal' : rowCount <= 13 ? 'compact' : 'dense';
+  
+  const scaling = {
+    normal: { tablePad: '6px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '18px', infoFont: '7.5px', infoH3: '8px' },
+    compact: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '10px', communityH2: '16px', infoFont: '7px', infoH3: '7.5px' },
+    dense: { tablePad: '3px', tableFont: '7px', headerFont: '6.5px', communityTop: '8px', communityH2: '14px', infoFont: '6.5px', infoH3: '7px' }
+  }[scale];
+
   const rows = data.map(d => `
     <tr>
       <td>${d.plan_name}</td>
@@ -595,25 +627,28 @@ function availableHomesHTML(community, data) {
   `).join('');
 
   return `<!DOCTYPE html><html><head><style>${commonStyles}
-    /* Tighter table rows for Available Homes to fit more listings */
-    tbody td { padding: 4px 6px; }
+    /* Dynamic scaling */
+    table { font-size: ${scaling.tableFont}; }
+    tbody td { padding: ${scaling.tablePad}; font-size: ${scaling.tableFont}; }
+    thead th { font-size: ${scaling.headerFont}; padding: ${scaling.tablePad}; }
+    ${scale !== 'normal' ? `.header { margin-bottom: 10px; padding-bottom: 8px; }` : ''}
     
     .header-row { display: flex; justify-content: space-between; align-items: flex-end; }
-    .community-info { margin-top: 12px; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 7.5px; }
-    .info-section h3 { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: 7.5px; line-height: 1.3; color: #444; }
+    .community-info { margin-top: ${scaling.communityTop}; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scale === 'normal' ? '12px' : '10px'}; font-size: ${scaling.infoFont}; }
+    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: 1.3; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
-    .warranty-section { margin-top: 6px; }
-    .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 10px; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: 7.5px; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: 11px; font-weight: 300; color: #2D2D2D; }
-    .sales-manager .email { font-size: 7.5px; color: #444; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: 7.5px; }
-    .tax-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: 7.5px; }
-    .school-section p { font-size: 7.5px; color: #444; line-height: 1.3; }
+    .warranty-section { margin-top: ${scale === 'normal' ? '6px' : '4px'}; }
+    .sales-manager { margin-top: ${scale === 'normal' ? '6px' : '4px'}; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '10px' : '9px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '11px' : '10px'}; font-weight: 300; color: #2D2D2D; }
+    .sales-manager .email { font-size: ${scaling.infoFont}; color: #444; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
+    .tax-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: ${scaling.infoFont}; }
+    .school-section p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
   </style></head><body>
     <div class="page">
       <div class="header">
