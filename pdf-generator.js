@@ -232,7 +232,22 @@ function homesitesHTML(community, data) {
     </tr>
   `).join('');
 
-  return `<!DOCTYPE html><html><head><style>${commonStyles}</style></head><body>
+  return `<!DOCTYPE html><html><head><style>${commonStyles}
+    .community-info { margin-top: 40px; page-break-inside: avoid; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-style: italic; color: #2D2D2D; margin-bottom: 20px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 11px; }
+    .info-section h3 { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 8px; letter-spacing: 1px; }
+    .info-section p, .info-section li { font-size: 10px; line-height: 1.4; color: #444; }
+    .info-section ul { list-style: disc; padding-left: 16px; }
+    .sales-office { margin-top: 20px; }
+    .sales-office h3 { font-size: 10px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 1px; }
+    .sales-office p { font-size: 10px; color: #444; }
+    .sales-manager { margin-top: 16px; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 14px; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: 10px; color: #666; }
+    .sales-manager .phone { font-size: 16px; font-weight: 300; color: #2D2D2D; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 2px 0; }
+  </style></head><body>
     <div class="page">
       <div class="header">
         <img src="${logoDataUrl}" class="logo">
@@ -256,6 +271,43 @@ function homesitesHTML(community, data) {
         </thead>
         <tbody>${rows}</tbody>
       </table>
+
+      <div class="community-info">
+        <h2>Community Information</h2>
+        <div class="info-grid">
+          <div>
+            <div class="info-section">
+              <h3>Neighborhood Highlights</h3>
+              <ul>
+                <li>Adjacent to Maple Grove Park which include a silo pavilion, children's playground with zipline, pickleball courts, and open grass area</li>
+                <li>Parkside has no HOA but does include CC&Rs with a $15 annual fee</li>
+              </ul>
+            </div>
+            <div class="sales-office">
+              <h3>Sales Office</h3>
+              <p>${community.sales_office_address || ''}<br>
+              ${community.sales_office_city || ''}<br>
+              Office Hours: ${community.sales_office_hours || ''}</p>
+            </div>
+            <div class="sales-manager">
+              <h3 style="font-style:italic;">${community.sales_manager_name || ''}</h3>
+              <p>Community Sales Manager</p>
+              <p>${community.sales_office_address || ''}${community.sales_office_city ? ', ' + community.sales_office_city : ''}</p>
+              <p class="phone">${community.sales_manager_phone || ''}</p>
+            </div>
+          </div>
+          <div>
+            <div class="info-section">
+              <h3>Utility Information</h3>
+              <div class="utility-row"><span>Electricity:</span><span>Rocky Mountain Power ......... 800-221-7070</span></div>
+              <div class="utility-row"><span>Garbage/Recycling:</span><span>Mapleton City .................... 801-489-5655</span></div>
+              <div class="utility-row"><span>Natural Gas:</span><span>Enbridge Gas ...................... 800-323-5517</span></div>
+              <div class="utility-row"><span>Water/Sewer:</span><span>Mapleton City .................... 801-489-5655</span></div>
+              <div class="utility-row"><span>Internet:</span><span>Xfinity ................................ 800-934-6489</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
       ${footerHTML(community)}
     </div>
   </body></html>`;
