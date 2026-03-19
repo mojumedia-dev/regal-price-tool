@@ -692,18 +692,16 @@ async function generatePDF(type, community, data, outputPath) {
   const dateStr = `${(today.getMonth()+1).toString().padStart(2,'0')}.${today.getDate().toString().padStart(2,'0')}.${today.getFullYear().toString().slice(2)}`;
   
   const footerTemplate = `
-    <div style="width: 100%; background-color: #6B1D2A; color: white; text-align: center; padding: 8px 36px 6px; font-family: 'Source Sans 3', Arial, sans-serif; font-size: 9px; -webkit-print-color-adjust: exact;">
-      <div style="display: flex; justify-content: center; align-items: center; gap: 20px; font-weight: 600; letter-spacing: 2px; margin-bottom: 6px;">
+    <div style="width: 100%; background-color: #6B1D2A; color: white; padding: 10px 36px 8px; font-family: 'Source Sans 3', Arial, sans-serif; -webkit-print-color-adjust: exact; box-sizing: border-box;">
+      <div style="display: flex; justify-content: center; align-items: center; gap: 20px; font-size: 11px; font-weight: 600; letter-spacing: 2px; margin-bottom: 8px;">
         <span>${community.website || 'REGALUT.COM'}</span>
-        <span style="width: 2px; height: 14px; background: white; display: inline-block;"></span>
+        <span style="width: 2px; height: 14px; background: white;"></span>
         <span>${community.phone || '385-446-5524'}</span>
       </div>
-      <div style="display: flex; align-items: flex-start; gap: 6px; padding: 0 20px;">
+      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
         <img src="${ehoDataUrl}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;">
-        <div style="font-size: 6px; line-height: 1.3; text-align: left; opacity: 0.9; flex: 1;">
-          Pricing and specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and
-          may include upgraded options available for purchase at a higher cost that are not included in the base price of the home, whether visually represented as
-          optional or not. Please contact us to review plans, pricing, options, incentives and availability. Marketed by Regal Homes Realty. ${dateStr}
+        <div style="font-size: 7px; line-height: 1.4; text-align: left; opacity: 0.9; flex: 1;">
+          Pricing and specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and may include upgraded options available for purchase at a higher cost that are not included in the base price of the home, whether visually represented as optional or not. Please contact us to review plans, pricing, options, incentives and availability. Marketed by Regal Homes Realty. ${dateStr}
         </div>
       </div>
     </div>
