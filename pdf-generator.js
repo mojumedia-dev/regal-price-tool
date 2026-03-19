@@ -173,6 +173,26 @@ function getCommunityInfo(slug) {
   return communityInfo[slug] || communityInfo['parkside']; // Fallback to parkside if not found
 }
 
+function renderSalesManagers(community, showHeader = false) {
+  // Use new salesManagers array if available, otherwise fall back to legacy fields
+  const managers = community.salesManagers && community.salesManagers.length > 0 
+    ? community.salesManagers 
+    : (community.sales_manager_name ? [{ name: community.sales_manager_name, phone: community.sales_manager_phone, email: community.sales_manager_email }] : []);
+  
+  if (managers.length === 0) return '';
+  
+  return `<div class="sales-manager">
+    ${showHeader ? '<h3>Community Sales Manager</h3>' : ''}
+    ${managers.map((mgr, i) => `
+      ${mgr.name ? `<h3 style="font-style:italic;${(i > 0 || showHeader) ? ' margin-top:4px;' : ''}">${mgr.name}</h3>` : ''}
+      ${!showHeader && i === 0 ? '<p>Community Sales Manager</p>' : ''}
+      ${mgr.phone ? `<p class="phone">${mgr.phone}</p>` : ''}
+      ${mgr.email ? `<p class="email">${mgr.email}</p>` : ''}
+      ${i < managers.length - 1 && !showHeader ? '<div style="margin-top:8px;"></div>' : ''}
+    `).join('')}
+  </div>`;
+}
+
 const commonStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap');
   
@@ -392,13 +412,7 @@ function homesitesHTML(community, data) {
               <p>${community.sales_office_address || ''}${community.sales_office_address && community.sales_office_city ? '<br>' : ''}
               ${community.sales_office_city || ''}${community.sales_office_hours ? '<br>Office Hours: ' + community.sales_office_hours : ''}</p>
             </div>` : ''}
-            ${community.sales_manager_name || community.sales_manager_phone ? `
-            <div class="sales-manager">
-              ${community.sales_manager_name ? `<h3 style="font-style:italic;">${community.sales_manager_name}</h3>` : ''}
-              <p>Community Sales Manager</p>
-              ${community.sales_office_address || community.sales_office_city ? `<p>${community.sales_office_address || ''}${community.sales_office_city ? (community.sales_office_address ? ', ' : '') + community.sales_office_city : ''}</p>` : ''}
-              ${community.sales_manager_phone ? `<p class="phone">${community.sales_manager_phone}</p>` : ''}
-            </div>` : ''}
+            ${renderSalesManagers(community)}
           </div>
           <div>
             <div class="info-section">
@@ -515,13 +529,7 @@ function basePricesHTML(community, data) {
               <p>${community.sales_office_address || ''}${community.sales_office_address && community.sales_office_city ? '<br>' : ''}
               ${community.sales_office_city || ''}${community.sales_office_hours ? '<br>Office Hours: ' + community.sales_office_hours : ''}</p>
             </div>` : ''}
-            ${community.sales_manager_name || community.sales_manager_phone ? `
-            <div class="sales-manager">
-              ${community.sales_manager_name ? `<h3 style="font-style:italic;">${community.sales_manager_name}</h3>` : ''}
-              <p>Community Sales Manager</p>
-              ${community.sales_office_address || community.sales_office_city ? `<p>${community.sales_office_address || ''}${community.sales_office_city ? (community.sales_office_address ? ', ' : '') + community.sales_office_city : ''}</p>` : ''}
-              ${community.sales_manager_phone ? `<p class="phone">${community.sales_manager_phone}</p>` : ''}
-            </div>` : ''}
+            ${renderSalesManagers(community)}
           </div>
           <div>
             <div class="info-section">
@@ -644,13 +652,7 @@ function availableHomesHTML(community, data) {
               </ul>
               <p>The warranty is fully transferable for a period of 10 years</p>
             </div>
-            ${community.sales_manager_name || community.sales_manager_phone || community.sales_manager_email ? `
-            <div class="sales-manager">
-              <h3>Community Sales Manager</h3>
-              ${community.sales_manager_name ? `<h3 style="font-style:italic; margin-top:4px;">${community.sales_manager_name}</h3>` : ''}
-              ${community.sales_manager_phone ? `<p class="phone">${community.sales_manager_phone}</p>` : ''}
-              ${community.sales_manager_email ? `<p class="email">${community.sales_manager_email}</p>` : ''}
-            </div>` : ''}
+            ${renderSalesManagers(community, true)}
           </div>
           <div>
             <div class="info-section">

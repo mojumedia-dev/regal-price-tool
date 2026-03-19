@@ -688,6 +688,9 @@ app.post('/api/communities/:id/generate-pdf/:type', auth, async (req, res) => {
     const community = db.prepare('SELECT * FROM communities WHERE id = ?').get(communityId);
     if (!community) return res.status(404).json({ error: 'Community not found' });
 
+    // Fetch sales managers for this community
+    community.salesManagers = db.prepare('SELECT name, phone, email FROM sales_managers WHERE community_id = ? ORDER BY sort_order').all(communityId);
+
     const { generatePDF } = require('./pdf-generator');
     let data;
     if (pdfType === 'homesites') {

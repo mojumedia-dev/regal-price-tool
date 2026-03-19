@@ -33,6 +33,15 @@ db.exec(`
     homefiniti_location_id TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS sales_managers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    community_id INTEGER REFERENCES communities(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    sort_order INTEGER DEFAULT 0
+  );
+
   CREATE TABLE IF NOT EXISTS user_communities (
     user_id INTEGER REFERENCES users(id),
     community_id INTEGER REFERENCES communities(id),
@@ -117,8 +126,28 @@ const insertComm = db.prepare(`INSERT OR REPLACE INTO communities (id, name, slu
 insertComm.run(1, 'Parkside', 'parkside', '385-446-5524', '2458 W Aurora Ave', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com', '14565');
 insertComm.run(2, 'Bella Vita', 'bella-vita', '801-598-4949', '526 N Legend Way', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Gary Hansen', '801-598-4949', 'Gary.H@RegalUT.com', '14559');
 insertComm.run(3, 'Bristol Farms', 'bristol-farms', '385-503-5375', '1722 S 4300 W', 'OGDEN, UT 84401', 'Monday - Saturday  11am - 5pm', 'Tristan Hamblin', '385-310-6871', 'tristan@regalut.com', '15250');
-insertComm.run(4, 'Amanti Lago', 'amanti-lago', '385-481-5139', '1757 W Amanti Lago Court', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Melinda Balsterholt / Gina McBride', '801-656-9183 / 801-688-2279', 'melinda@regalut.com / gina@regalut.com', '14558');
+insertComm.run(4, 'Amanti Lago', 'amanti-lago', '385-481-5139', '1757 W Amanti Lago Court', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', null, null, null, '14558');
 insertComm.run(5, 'Windflower', 'windflower', '385-481-3475', '1901 S Sawmill Blvd', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Marissa Burdett', '385-481-3475', 'marissa@regalut.com', '14566');
+
+// ===== SALES MANAGERS =====
+const insertManager = db.prepare(`INSERT OR REPLACE INTO sales_managers (id, community_id, name, phone, email, sort_order) VALUES (?, ?, ?, ?, ?, ?)`);
+let managerId = 1;
+
+// Parkside (1 manager)
+insertManager.run(managerId++, 1, 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com', 1);
+
+// Bella Vita (1 manager)
+insertManager.run(managerId++, 2, 'Gary Hansen', '801-598-4949', 'Gary.H@RegalUT.com', 1);
+
+// Bristol Farms (1 manager)
+insertManager.run(managerId++, 3, 'Tristan Hamblin', '385-310-6871', 'tristan@regalut.com', 1);
+
+// Amanti Lago (2 managers)
+insertManager.run(managerId++, 4, 'Melinda Balsterholt', '801-656-9183', 'melinda@regalut.com', 1);
+insertManager.run(managerId++, 4, 'Gina McBride', '801-688-2279', 'gina@regalut.com', 2);
+
+// Windflower (1 manager)
+insertManager.run(managerId++, 5, 'Marissa Burdett', '385-481-3475', 'marissa@regalut.com', 1);
 
 // Assign all communities to users
 for (let commId = 1; commId <= 5; commId++) {
