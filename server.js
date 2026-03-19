@@ -754,6 +754,7 @@ async function startServer() {
   try { require('./migrate-2026-03-12-last-synced-price')(db); } catch(e) { console.error('Migration error:', e.message); }
   try { require('./migrate-2026-03-12-set-live-prices')(db); } catch(e) { console.error('Migration error:', e.message); }
   try { require('./migrate-2026-03-12-cleanup-parkside-available')(db); } catch(e) { console.error('Migration error:', e.message); }
+  try { require('./migrate-2026-03-19-sales-managers')(db); } catch(e) { console.error('Migration error:', e.message); }
 
   // Create sync log tables
   db.exec(`
