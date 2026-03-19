@@ -22,6 +22,162 @@ function formatNumber(n) {
   return Number(n).toLocaleString('en-US');
 }
 
+// Community-specific information
+const communityInfo = {
+  'parkside': {
+    highlights: [
+      'Adjacent to Maple Grove Park which include a silo pavilion, children's playground with zipline, pickleball courts, and open grass area',
+      'Parkside has no HOA but does include CC&Rs with a $15 annual fee'
+    ],
+    utilities: {
+      electricity: { name: 'Rocky Mountain Power', phone: '800-221-7070' },
+      garbage: { name: 'Mapleton City', phone: '801-489-5655' },
+      gas: { name: 'Enbridge Gas', phone: '800-323-5517' },
+      water: { name: 'Mapleton City', phone: '801-489-5655' },
+      internet: { name: 'Xfinity', phone: '800-934-6489' }
+    },
+    propertyTax: {
+      county: { name: 'Sample County', rate: '$.6195 per $100 of assessed value' },
+      city: { name: 'Town of Mapleton City', rate: '$.47 per $100 of assessed value' },
+      combined: '$1.08 per $100 of assessed value'
+    },
+    schools: {
+      district: 'Nebo School District',
+      elementary: 'Maple Ridge Elementary School',
+      juniorHigh: 'Mapleton Jr. High School',
+      highSchool: 'Maple Mountain High School'
+    },
+    amenities: [
+      'Community borders Maple Grove Park',
+      'Bella Vita Community Pool Membership Available'
+    ]
+  },
+  'bella-vita': {
+    highlights: [
+      'Resort-style community pool and clubhouse',
+      'Walking trails and green spaces throughout',
+      'Close to shopping, dining, and entertainment'
+    ],
+    utilities: {
+      electricity: { name: 'Rocky Mountain Power', phone: '800-221-7070' },
+      garbage: { name: 'Mapleton City', phone: '801-489-5655' },
+      gas: { name: 'Enbridge Gas', phone: '800-323-5517' },
+      water: { name: 'Mapleton City', phone: '801-489-5655' },
+      internet: { name: 'Xfinity', phone: '800-934-6489' }
+    },
+    propertyTax: {
+      county: { name: 'Utah County', rate: '$.6195 per $100 of assessed value' },
+      city: { name: 'Mapleton City', rate: '$.47 per $100 of assessed value' },
+      combined: '$1.08 per $100 of assessed value'
+    },
+    schools: {
+      district: 'Nebo School District',
+      elementary: 'Maple Ridge Elementary School',
+      juniorHigh: 'Mapleton Jr. High School',
+      highSchool: 'Maple Mountain High School'
+    },
+    amenities: [
+      'Community pool and clubhouse',
+      'Walking and biking trails',
+      'Parks and green spaces'
+    ]
+  },
+  'bristol-farms': {
+    highlights: [
+      'Peaceful country living near Ogden',
+      'Large homesites with mountain views',
+      'Close to outdoor recreation'
+    ],
+    utilities: {
+      electricity: { name: 'Rocky Mountain Power', phone: '800-221-7070' },
+      garbage: { name: 'West Haven City', phone: '801-737-8414' },
+      gas: { name: 'Dominion Energy', phone: '800-323-5517' },
+      water: { name: 'West Haven City', phone: '801-737-8414' },
+      internet: { name: 'Xfinity', phone: '800-934-6489' }
+    },
+    propertyTax: {
+      county: { name: 'Weber County', rate: '$.68 per $100 of assessed value' },
+      city: { name: 'West Haven City', rate: '$.52 per $100 of assessed value' },
+      combined: '$1.20 per $100 of assessed value'
+    },
+    schools: {
+      district: 'Weber School District',
+      elementary: 'West Haven Elementary',
+      juniorHigh: 'Rocky Mountain Jr. High',
+      highSchool: 'Fremont High School'
+    },
+    amenities: [
+      'Large homesites',
+      'Mountain and valley views',
+      'Close to Pineview Reservoir'
+    ]
+  },
+  'amanti-lago': {
+    highlights: [
+      'Luxury lakeside living in Heber Valley',
+      'Private community with exclusive amenities',
+      'Stunning mountain and water views'
+    ],
+    utilities: {
+      electricity: { name: 'Rocky Mountain Power', phone: '800-221-7070' },
+      garbage: { name: 'Heber City', phone: '435-654-3211' },
+      gas: { name: 'Dominion Energy', phone: '800-323-5517' },
+      water: { name: 'Heber City', phone: '435-654-3211' },
+      internet: { name: 'CentraCom', phone: '435-654-0220' }
+    },
+    propertyTax: {
+      county: { name: 'Wasatch County', rate: '$.58 per $100 of assessed value' },
+      city: { name: 'Heber City', rate: '$.45 per $100 of assessed value' },
+      combined: '$1.03 per $100 of assessed value'
+    },
+    schools: {
+      district: 'Wasatch School District',
+      elementary: 'Heber Valley Elementary',
+      juniorHigh: 'Rocky Mountain Middle School',
+      highSchool: 'Wasatch High School'
+    },
+    amenities: [
+      'Private lake access',
+      'Community clubhouse',
+      'Walking trails around the lake'
+    ]
+  },
+  'windflower': {
+    highlights: [
+      'Charming community in Heber Valley',
+      'Family-friendly neighborhood',
+      'Close to schools and parks'
+    ],
+    utilities: {
+      electricity: { name: 'Rocky Mountain Power', phone: '800-221-7070' },
+      garbage: { name: 'Heber City', phone: '435-654-3211' },
+      gas: { name: 'Dominion Energy', phone: '800-323-5517' },
+      water: { name: 'Heber City', phone: '435-654-3211' },
+      internet: { name: 'CentraCom', phone: '435-654-0220' }
+    },
+    propertyTax: {
+      county: { name: 'Wasatch County', rate: '$.58 per $100 of assessed value' },
+      city: { name: 'Heber City', rate: '$.45 per $100 of assessed value' },
+      combined: '$1.03 per $100 of assessed value'
+    },
+    schools: {
+      district: 'Wasatch School District',
+      elementary: 'Heber Valley Elementary',
+      juniorHigh: 'Rocky Mountain Middle School',
+      highSchool: 'Wasatch High School'
+    },
+    amenities: [
+      'Parks and playgrounds',
+      'Walking and biking trails',
+      'Close to downtown Heber'
+    ]
+  }
+};
+
+function getCommunityInfo(slug) {
+  return communityInfo[slug] || communityInfo['parkside']; // Fallback to parkside if not found
+}
+
 const commonStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600&display=swap');
   
@@ -221,6 +377,7 @@ function homesitesHTML(community, data) {
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const now = new Date();
   const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
+  const info = getCommunityInfo(community.slug);
 
   const rows = data.map(d => `
     <tr>
@@ -279,8 +436,7 @@ function homesitesHTML(community, data) {
             <div class="info-section">
               <h3>Neighborhood Highlights</h3>
               <ul>
-                <li>Adjacent to Maple Grove Park which include a silo pavilion, children's playground with zipline, pickleball courts, and open grass area</li>
-                <li>Parkside has no HOA but does include CC&Rs with a $15 annual fee</li>
+                ${info.highlights.map(h => `<li>${h}</li>`).join('')}
               </ul>
             </div>
             <div class="sales-office">
@@ -299,11 +455,11 @@ function homesitesHTML(community, data) {
           <div>
             <div class="info-section">
               <h3>Utility Information</h3>
-              <div class="utility-row"><span>Electricity:</span><span>Rocky Mountain Power ......... 800-221-7070</span></div>
-              <div class="utility-row"><span>Garbage/Recycling:</span><span>Mapleton City .................... 801-489-5655</span></div>
-              <div class="utility-row"><span>Natural Gas:</span><span>Enbridge Gas ...................... 800-323-5517</span></div>
-              <div class="utility-row"><span>Water/Sewer:</span><span>Mapleton City .................... 801-489-5655</span></div>
-              <div class="utility-row"><span>Internet:</span><span>Xfinity ................................ 800-934-6489</span></div>
+              <div class="utility-row"><span>Electricity:</span><span>${info.utilities.electricity.name} ......... ${info.utilities.electricity.phone}</span></div>
+              <div class="utility-row"><span>Garbage/Recycling:</span><span>${info.utilities.garbage.name} .................... ${info.utilities.garbage.phone}</span></div>
+              <div class="utility-row"><span>Natural Gas:</span><span>${info.utilities.gas.name} ...................... ${info.utilities.gas.phone}</span></div>
+              <div class="utility-row"><span>Water/Sewer:</span><span>${info.utilities.water.name} .................... ${info.utilities.water.phone}</span></div>
+              <div class="utility-row"><span>Internet:</span><span>${info.utilities.internet.name} ................................ ${info.utilities.internet.phone}</span></div>
             </div>
           </div>
         </div>
@@ -317,6 +473,7 @@ function basePricesHTML(community, data) {
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const now = new Date();
   const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
+  const info = getCommunityInfo(community.slug);
   
   const compact = data.length > 10;
   const rowPad = compact ? '4px 6px' : '8px';
@@ -390,8 +547,7 @@ function basePricesHTML(community, data) {
             <div class="info-section">
               <h3>Neighborhood Highlights</h3>
               <ul>
-                <li>Adjacent to Maple Grove Park which include a silo pavilion, children's playground with zipline, pickleball courts, and open grass area</li>
-                <li>Parkside has no HOA but does include CC&Rs with a $15 annual fee</li>
+                ${info.highlights.map(h => `<li>${h}</li>`).join('')}
               </ul>
             </div>
             <div class="sales-office">
@@ -410,11 +566,11 @@ function basePricesHTML(community, data) {
           <div>
             <div class="info-section">
               <h3>Utility Information</h3>
-              <div class="utility-row"><span>Electricity:</span><span>Rocky Mountain Power ......... 800-221-7070</span></div>
-              <div class="utility-row"><span>Garbage/Recycling:</span><span>Mapleton City .................... 801-489-5655</span></div>
-              <div class="utility-row"><span>Natural Gas:</span><span>Enbridge Gas ...................... 800-323-5517</span></div>
-              <div class="utility-row"><span>Water/Sewer:</span><span>Mapleton City .................... 801-489-5655</span></div>
-              <div class="utility-row"><span>Internet:</span><span>Xfinity ................................ 800-934-6489</span></div>
+              <div class="utility-row"><span>Electricity:</span><span>${info.utilities.electricity.name} ......... ${info.utilities.electricity.phone}</span></div>
+              <div class="utility-row"><span>Garbage/Recycling:</span><span>${info.utilities.garbage.name} .................... ${info.utilities.garbage.phone}</span></div>
+              <div class="utility-row"><span>Natural Gas:</span><span>${info.utilities.gas.name} ...................... ${info.utilities.gas.phone}</span></div>
+              <div class="utility-row"><span>Water/Sewer:</span><span>${info.utilities.water.name} .................... ${info.utilities.water.phone}</span></div>
+              <div class="utility-row"><span>Internet:</span><span>${info.utilities.internet.name} ................................ ${info.utilities.internet.phone}</span></div>
             </div>
           </div>
         </div>
@@ -428,6 +584,7 @@ function availableHomesHTML(community, data) {
   const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const now = new Date();
   const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
+  const info = getCommunityInfo(community.slug);
 
   const rows = data.map(d => `
     <tr>
@@ -496,8 +653,7 @@ function availableHomesHTML(community, data) {
             <div class="info-section">
               <h3>Amenities</h3>
               <ul>
-                <li>Community borders Maple Grove Park</li>
-                <li>Bella Vita Community Pool Membership Available</li>
+                ${info.amenities.map(a => `<li>${a}</li>`).join('')}
               </ul>
             </div>
             <div class="warranty-section info-section">
@@ -519,23 +675,23 @@ function availableHomesHTML(community, data) {
           <div>
             <div class="info-section">
               <h3>Utility Information</h3>
-              <div class="utility-row"><span>Electricity:</span><span>Rocky Mountain Power......800-221-7070</span></div>
-              <div class="utility-row"><span>Garbage/Recycling:</span><span>Mapleton City...................801-489-5655</span></div>
-              <div class="utility-row"><span>Natural Gas:</span><span>Enbridge Gas.....................800-323-5517</span></div>
-              <div class="utility-row"><span>Sewer/Water:</span><span>Mapleton City...................801-489-5655</span></div>
-              <div class="utility-row"><span>Internet:</span><span>Xfinity...............................800-934-6489</span></div>
+              <div class="utility-row"><span>Electricity:</span><span>${info.utilities.electricity.name}......${info.utilities.electricity.phone}</span></div>
+              <div class="utility-row"><span>Garbage/Recycling:</span><span>${info.utilities.garbage.name}...................${info.utilities.garbage.phone}</span></div>
+              <div class="utility-row"><span>Natural Gas:</span><span>${info.utilities.gas.name}.....................${info.utilities.gas.phone}</span></div>
+              <div class="utility-row"><span>Sewer/Water:</span><span>${info.utilities.water.name}...................${info.utilities.water.phone}</span></div>
+              <div class="utility-row"><span>Internet:</span><span>${info.utilities.internet.name}...............................${info.utilities.internet.phone}</span></div>
             </div>
             <div class="info-section" style="margin-top:12px;">
               <h3>Property Tax Rates</h3>
-              <div class="tax-row"><span>Sample County:</span><span>$.6195 per $100 of assessed value</span></div>
-              <div class="tax-row"><span>Town of Mapleton City:</span><span>$.47 per $100 of assessed value</span></div>
-              <div class="tax-row"><span>Combined Town/County:</span><span>$1.08 per $100 of assessed value</span></div>
+              <div class="tax-row"><span>${info.propertyTax.county.name}:</span><span>${info.propertyTax.county.rate}</span></div>
+              <div class="tax-row"><span>${info.propertyTax.city.name}:</span><span>${info.propertyTax.city.rate}</span></div>
+              <div class="tax-row"><span>Combined Town/County:</span><span>${info.propertyTax.combined}</span></div>
             </div>
             <div class="info-section school-section" style="margin-top:12px;">
-              <h3>Nebo School District</h3>
-              <p>Maple Ridge Elementary School</p>
-              <p>Mapleton Jr. High School</p>
-              <p>Maple Mountain High School</p>
+              <h3>${info.schools.district}</h3>
+              <p>${info.schools.elementary}</p>
+              <p>${info.schools.juniorHigh}</p>
+              <p>${info.schools.highSchool}</p>
             </div>
           </div>
         </div>
