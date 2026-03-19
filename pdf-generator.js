@@ -386,14 +386,14 @@ function homesitesHTML(community, data) {
   return `<!DOCTYPE html><html><head><style>${commonStyles}
     .community-info { margin-top: 16px; page-break-inside: avoid; }
     .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 7.5px; }
     .info-section h3 { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
     .info-section p, .info-section li { font-size: 7.5px; line-height: 1.3; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
-    .sales-office { margin-top: 8px; }
+    .sales-office { margin-top: 6px; }
     .sales-office h3 { font-size: 8px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
     .sales-office p { font-size: 7.5px; color: #444; line-height: 1.3; }
-    .sales-manager { margin-top: 8px; }
+    .sales-manager { margin-top: 6px; }
     .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 10px; font-style: italic; color: #2D2D2D; }
     .sales-manager p { font-size: 7.5px; color: #666; line-height: 1.3; }
     .sales-manager .phone { font-size: 11px; font-weight: 300; color: #2D2D2D; }
@@ -492,20 +492,20 @@ function basePricesHTML(community, data) {
       .header-text h1 { font-size: 26px; }
       .page { padding: 0.35in 0.5in 1.0in 0.5in; }
     ` : ''}
-    .community-info { margin-top: 12px; page-break-inside: avoid; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 16px; font-style: italic; color: #2D2D2D; margin-bottom: 6px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 7.5px; }
-    .info-section h3 { font-size: 7.5px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 3px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: 7px; line-height: 1.3; color: #444; }
+    .community-info { margin-top: 16px; page-break-inside: avoid; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 7.5px; }
+    .info-section h3 { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: 7.5px; line-height: 1.3; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
     .sales-office { margin-top: 6px; }
-    .sales-office h3 { font-size: 7.5px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sales-office p { font-size: 7px; color: #444; line-height: 1.3; }
+    .sales-office h3 { font-size: 8px; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sales-office p { font-size: 7.5px; color: #444; line-height: 1.3; }
     .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 9px; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: 7px; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: 10px; font-weight: 300; color: #2D2D2D; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: 7px; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 10px; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: 7.5px; color: #666; line-height: 1.3; }
+    .sales-manager .phone { font-size: 11px; font-weight: 300; color: #2D2D2D; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: 7.5px; }
   </style></head><body>
     <div class="page">
       <div class="header">
