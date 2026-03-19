@@ -804,6 +804,26 @@ async function startServer() {
     );
   `);
 
+  // Maintenance endpoint to fix Amanti Lago sales managers
+  app.get('/admin/fix-amanti-managers', (req, res) => {
+    try {
+      // Clear existing Amanti Lago managers
+      db.exec('DELETE FROM sales_managers WHERE community_id=4');
+      
+      // Add both managers
+      const insert = db.prepare('INSERT INTO sales_managers (community_id, name, phone, email, sort_order) VALUES (?, ?, ?, ?, ?)');
+      insert.run(4, 'Melinda Balsterholt', '801-656-9183', 'melinda@regalut.com', 1);
+      insert.run(4, 'Gina McBride', '801-688-2279', 'gina@regalut.com', 2);
+      
+      db.save();
+      
+      const managers = db.prepare('SELECT * FROM sales_managers WHERE community_id=4').all();
+      res.json({ success: true, message: 'Fixed Amanti Lago managers', managers });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.listen(PORT, () => console.log(`🏠 Regal Homes Price Tool running on http://localhost:${PORT}`));
 }
 
