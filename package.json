@@ -4,7 +4,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "migrate": "node migrate.js up",
+    "migrate:down": "node migrate.js down",
+    "migrate:status": "node migrate.js status"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
