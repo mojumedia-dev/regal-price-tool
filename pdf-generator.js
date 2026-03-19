@@ -21,7 +21,7 @@ function formatNumber(n) {
 const communityInfo = {
   'parkside': {
     highlights: [
-      'Adjacent to Maple Grove Park which include a silo pavilion, children's playground with zipline, pickleball courts, and open grass area',
+      'Adjacent to Maple Grove Park which include a silo pavilion, children\'s playground with zipline, pickleball courts, and open grass area',
       'Parkside has no HOA but does include CC&Rs with a $15 annual fee'
     ],
     utilities: {
