@@ -218,6 +218,10 @@ function footerHTML(community) {
 }
 
 function homesitesHTML(community, data) {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
+  const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
+
   const rows = data.map(d => `
     <tr>
       <td style="text-align:center; padding-left:8px;">${d.lot_number}</td>
@@ -232,8 +236,11 @@ function homesitesHTML(community, data) {
     <div class="page">
       <div class="header">
         <img src="${logoDataUrl}" class="logo">
-        <div class="header-text">
-          <h1>Homesites</h1>
+        <div class="header-text" style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <h1>Homesites</h1>
+            <span style="font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:#6B1D2A;">${monthYear}</span>
+          </div>
           <div class="subtitle">${community.name}</div>
         </div>
       </div>
@@ -255,6 +262,10 @@ function homesitesHTML(community, data) {
 }
 
 function basePricesHTML(community, data) {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
+  const monthYear = `${months[now.getMonth()]} ${now.getFullYear()}`;
+  
   const compact = data.length > 10;
   const rowPad = compact ? '4px 6px' : '8px';
   const rows = data.map(d => `
@@ -296,8 +307,11 @@ function basePricesHTML(community, data) {
     <div class="page">
       <div class="header">
         <img src="${logoDataUrl}" class="logo">
-        <div class="header-text">
-          <h1>Base Price</h1>
+        <div class="header-text" style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <h1>Base Price</h1>
+            <span style="font-family:'Playfair Display',serif; font-style:italic; font-size:16px; color:#6B1D2A;">${monthYear}</span>
+          </div>
           <div class="subtitle">${community.name}</div>
         </div>
       </div>
