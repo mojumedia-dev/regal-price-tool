@@ -178,24 +178,21 @@ const commonStyles = `
   
   * { margin: 0; padding: 0; box-sizing: border-box; }
   
-  @page { size: letter; margin: 0; }
+  @page { 
+    size: letter; 
+    margin: 0.35in 0.5in 0.85in 0.5in;
+  }
   
   body {
     font-family: 'Source Sans 3', 'Helvetica Neue', Arial, sans-serif;
     color: #2D2D2D;
-    width: 8.5in;
-    min-height: 11in;
-    position: relative;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .page {
     width: 8.5in;
-    height: 11in;
     position: relative;
-    padding: 0.35in 0.5in 0.85in 0.5in;
-    overflow: hidden;
   }
 
   .header {
@@ -375,12 +372,13 @@ function homesitesHTML(community, data) {
 
   // Dynamic scaling based on row count
   const rowCount = data.length;
-  const scale = rowCount <= 8 ? 'normal' : rowCount <= 12 ? 'compact' : 'dense';
+  const scale = rowCount <= 8 ? 'normal' : rowCount <= 12 ? 'compact' : rowCount <= 20 ? 'dense' : 'ultra';
   
   const scaling = {
     normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
     compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px' },
-    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' }
+    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' },
+    ultra: { tablePad: '4px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '8px', infoH3: '8.5px' }
   }[scale];
 
   const rows = data.map(d => `
@@ -485,12 +483,13 @@ function basePricesHTML(community, data) {
   
   // Dynamic scaling based on row count
   const rowCount = data.length;
-  const scale = rowCount <= 6 ? 'normal' : rowCount <= 10 ? 'compact' : 'dense';
+  const scale = rowCount <= 6 ? 'normal' : rowCount <= 10 ? 'compact' : rowCount <= 20 ? 'dense' : 'ultra';
   
   const scaling = {
     normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
     compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px' },
-    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' }
+    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' },
+    ultra: { tablePad: '4px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '8px', infoH3: '8.5px' }
   }[scale];
 
   const rowPad = scaling.tablePad;
@@ -604,12 +603,13 @@ function availableHomesHTML(community, data) {
 
   // Dynamic scaling based on row count (Available Homes typically has more rows)
   const rowCount = data.length;
-  const scale = rowCount <= 8 ? 'normal' : rowCount <= 13 ? 'compact' : 'dense';
+  const scale = rowCount <= 8 ? 'normal' : rowCount <= 13 ? 'compact' : rowCount <= 20 ? 'dense' : 'ultra';
   
   const scaling = {
     normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
     compact: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '19px', infoFont: '8.5px', infoH3: '9px' },
-    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '17px', infoFont: '8px', infoH3: '8.5px' }
+    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '17px', infoFont: '8px', infoH3: '8.5px' },
+    ultra: { tablePad: '4px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '15px', infoFont: '7.5px', infoH3: '8px' }
   }[scale];
 
   const rows = data.map(d => `
