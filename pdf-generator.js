@@ -275,69 +275,7 @@ const commonStyles = `
   tbody td:first-child { text-align: left; padding-left: 12px; }
   tbody td:last-child { font-weight: 600; }
 
-  .footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: #6B1D2A;
-    color: white;
-    text-align: center;
-    padding: 12px 0.5in 8px;
-  }
 
-  .footer-top {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    margin-bottom: 8px;
-  }
-
-  .footer-divider {
-    width: 2px;
-    height: 16px;
-    background: white;
-    display: inline-block;
-  }
-
-  .footer-bottom {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 0.3in;
-  }
-
-  .footer-eho {
-    width: 38px;
-    height: 38px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .footer-disclaimer {
-    font-size: 7px;
-    line-height: 1.4;
-    text-align: left;
-    opacity: 0.9;
-    flex: 1;
-  }
-
-  .eho-icon {
-    display: inline-block;
-    width: 28px;
-    height: 28px;
-    border: 1.5px solid white;
-    font-size: 5px;
-    text-align: center;
-    line-height: 1.2;
-    padding: 2px;
-  }
 `;
 
 function footerHTML(community) {
@@ -470,7 +408,6 @@ function homesitesHTML(community, data) {
           </div>
         </div>
       </div>
-      ${footerHTML(community)}
     </div>
   </body></html>`;
 }
@@ -590,7 +527,6 @@ function basePricesHTML(community, data) {
           </div>
         </div>
       </div>
-      ${footerHTML(community)}
     </div>
   </body></html>`;
 }
@@ -728,7 +664,6 @@ function availableHomesHTML(community, data) {
           </div>
         </div>
       </div>
-      ${footerHTML(community)}
     </div>
   </body></html>`;
 }
@@ -752,11 +687,41 @@ async function generatePDF(type, community, data, outputPath) {
   // Use domcontentloaded instead of networkidle0 for faster, more reliable loading
   await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 30000 });
   
+  // Build footer HTML for repeating footer
+  const today = new Date();
+  const dateStr = `${(today.getMonth()+1).toString().padStart(2,'0')}.${today.getDate().toString().padStart(2,'0')}.${today.getFullYear().toString().slice(2)}`;
+  
+  const footerTemplate = `
+    <div style="width: 100%; background-color: #6B1D2A; color: white; text-align: center; padding: 8px 36px 6px; font-family: 'Source Sans 3', Arial, sans-serif; font-size: 9px; -webkit-print-color-adjust: exact;">
+      <div style="display: flex; justify-content: center; align-items: center; gap: 20px; font-weight: 600; letter-spacing: 2px; margin-bottom: 6px;">
+        <span>${community.website || 'REGALUT.COM'}</span>
+        <span style="width: 2px; height: 14px; background: white; display: inline-block;"></span>
+        <span>${community.phone || '385-446-5524'}</span>
+      </div>
+      <div style="display: flex; align-items: flex-start; gap: 6px; padding: 0 20px;">
+        <img src="${ehoDataUrl}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;">
+        <div style="font-size: 6px; line-height: 1.3; text-align: left; opacity: 0.9; flex: 1;">
+          Pricing and specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and
+          may include upgraded options available for purchase at a higher cost that are not included in the base price of the home, whether visually represented as
+          optional or not. Please contact us to review plans, pricing, options, incentives and availability. Marketed by Regal Homes Realty. ${dateStr}
+        </div>
+      </div>
+    </div>
+  `;
+  
   await page.pdf({
     path: outputPath,
     format: 'Letter',
     printBackground: true,
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    displayHeaderFooter: true,
+    headerTemplate: '<div></div>',
+    footerTemplate: footerTemplate,
+    margin: { 
+      top: '0.35in', 
+      right: '0.5in', 
+      bottom: '0.85in', 
+      left: '0.5in' 
+    },
   });
   await browser.close();
   return outputPath;
