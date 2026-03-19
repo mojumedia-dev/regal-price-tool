@@ -347,7 +347,10 @@ function homesitesHTML(community, data) {
     .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '14px' : '11px'}; font-style: italic; color: #2D2D2D; }
     .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
     .sales-manager .phone { font-size: ${scale === 'normal' ? '15px' : '12px'}; font-weight: 300; color: #2D2D2D; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 2px 0; font-size: ${scaling.infoFont}; align-items: baseline; }
+    .utility-row .utility-label { flex: 0 0 auto; }
+    .utility-row .utility-name { flex: 1 1 auto; text-align: right; padding-right: 8px; }
+    .utility-row .utility-phone { flex: 0 0 auto; text-align: right; min-width: 80px; }
   </style></head><body>
     <div class="page">
       <div class="header">
@@ -400,11 +403,11 @@ function homesitesHTML(community, data) {
           <div>
             <div class="info-section">
               <h3>Utility Information</h3>
-              <div class="utility-row"><span>Electricity:</span><span>${info.utilities.electricity.name} ......... ${info.utilities.electricity.phone}</span></div>
-              <div class="utility-row"><span>Garbage/Recycling:</span><span>${info.utilities.garbage.name} .................... ${info.utilities.garbage.phone}</span></div>
-              <div class="utility-row"><span>Natural Gas:</span><span>${info.utilities.gas.name} ...................... ${info.utilities.gas.phone}</span></div>
-              <div class="utility-row"><span>Water/Sewer:</span><span>${info.utilities.water.name} .................... ${info.utilities.water.phone}</span></div>
-              <div class="utility-row"><span>Internet:</span><span>${info.utilities.internet.name} ................................ ${info.utilities.internet.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Electricity:</span><span class="utility-name">${info.utilities.electricity.name}</span><span class="utility-phone">${info.utilities.electricity.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Garbage/Recycling:</span><span class="utility-name">${info.utilities.garbage.name}</span><span class="utility-phone">${info.utilities.garbage.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Natural Gas:</span><span class="utility-name">${info.utilities.gas.name}</span><span class="utility-phone">${info.utilities.gas.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Water/Sewer:</span><span class="utility-name">${info.utilities.water.name}</span><span class="utility-phone">${info.utilities.water.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Internet:</span><span class="utility-name">${info.utilities.internet.name}</span><span class="utility-phone">${info.utilities.internet.phone}</span></div>
             </div>
           </div>
         </div>
@@ -464,7 +467,10 @@ function basePricesHTML(community, data) {
     .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '14px' : '11px'}; font-style: italic; color: #2D2D2D; }
     .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
     .sales-manager .phone { font-size: ${scale === 'normal' ? '15px' : '12px'}; font-weight: 300; color: #2D2D2D; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 2px 0; font-size: ${scaling.infoFont}; align-items: baseline; }
+    .utility-row .utility-label { flex: 0 0 auto; }
+    .utility-row .utility-name { flex: 1 1 auto; text-align: right; padding-right: 8px; }
+    .utility-row .utility-phone { flex: 0 0 auto; text-align: right; min-width: 80px; }
   </style></head><body>
     <div class="page">
       <div class="header">
@@ -520,11 +526,11 @@ function basePricesHTML(community, data) {
           <div>
             <div class="info-section">
               <h3>Utility Information</h3>
-              <div class="utility-row"><span>Electricity:</span><span>${info.utilities.electricity.name} ......... ${info.utilities.electricity.phone}</span></div>
-              <div class="utility-row"><span>Garbage/Recycling:</span><span>${info.utilities.garbage.name} .................... ${info.utilities.garbage.phone}</span></div>
-              <div class="utility-row"><span>Natural Gas:</span><span>${info.utilities.gas.name} ...................... ${info.utilities.gas.phone}</span></div>
-              <div class="utility-row"><span>Water/Sewer:</span><span>${info.utilities.water.name} .................... ${info.utilities.water.phone}</span></div>
-              <div class="utility-row"><span>Internet:</span><span>${info.utilities.internet.name} ................................ ${info.utilities.internet.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Electricity:</span><span class="utility-name">${info.utilities.electricity.name}</span><span class="utility-phone">${info.utilities.electricity.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Garbage/Recycling:</span><span class="utility-name">${info.utilities.garbage.name}</span><span class="utility-phone">${info.utilities.garbage.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Natural Gas:</span><span class="utility-name">${info.utilities.gas.name}</span><span class="utility-phone">${info.utilities.gas.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Water/Sewer:</span><span class="utility-name">${info.utilities.water.name}</span><span class="utility-phone">${info.utilities.water.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Internet:</span><span class="utility-name">${info.utilities.internet.name}</span><span class="utility-phone">${info.utilities.internet.phone}</span></div>
             </div>
           </div>
         </div>
@@ -584,7 +590,10 @@ function availableHomesHTML(community, data) {
     .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
     .sales-manager .phone { font-size: ${scale === 'normal' ? '14px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .sales-manager .email { font-size: ${scaling.infoFont}; color: #444; }
-    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
+    .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 2px 0; font-size: ${scaling.infoFont}; align-items: baseline; }
+    .utility-row .utility-label { flex: 0 0 auto; }
+    .utility-row .utility-name { flex: 1 1 auto; text-align: right; padding-right: 8px; }
+    .utility-row .utility-phone { flex: 0 0 auto; text-align: right; min-width: 80px; }
     .tax-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: ${scaling.infoFont}; }
     .school-section p { font-size: ${scaling.infoFont}; color: #444; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
   </style></head><body>
@@ -646,11 +655,11 @@ function availableHomesHTML(community, data) {
           <div>
             <div class="info-section">
               <h3>Utility Information</h3>
-              <div class="utility-row"><span>Electricity:</span><span>${info.utilities.electricity.name}......${info.utilities.electricity.phone}</span></div>
-              <div class="utility-row"><span>Garbage/Recycling:</span><span>${info.utilities.garbage.name}...................${info.utilities.garbage.phone}</span></div>
-              <div class="utility-row"><span>Natural Gas:</span><span>${info.utilities.gas.name}.....................${info.utilities.gas.phone}</span></div>
-              <div class="utility-row"><span>Sewer/Water:</span><span>${info.utilities.water.name}...................${info.utilities.water.phone}</span></div>
-              <div class="utility-row"><span>Internet:</span><span>${info.utilities.internet.name}...............................${info.utilities.internet.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Electricity:</span><span class="utility-name">${info.utilities.electricity.name}</span><span class="utility-phone">${info.utilities.electricity.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Garbage/Recycling:</span><span class="utility-name">${info.utilities.garbage.name}</span><span class="utility-phone">${info.utilities.garbage.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Natural Gas:</span><span class="utility-name">${info.utilities.gas.name}</span><span class="utility-phone">${info.utilities.gas.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Sewer/Water:</span><span class="utility-name">${info.utilities.water.name}</span><span class="utility-phone">${info.utilities.water.phone}</span></div>
+              <div class="utility-row"><span class="utility-label">Internet:</span><span class="utility-name">${info.utilities.internet.name}</span><span class="utility-phone">${info.utilities.internet.phone}</span></div>
             </div>
             <div class="info-section" style="margin-top:12px;">
               <h3>Property Tax Rates</h3>
