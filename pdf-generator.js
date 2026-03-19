@@ -224,7 +224,10 @@ const commonStyles = `
 
   .page {
     width: 8.5in;
+    min-height: 9.8in;
     position: relative;
+    display: flex;
+    flex-direction: column;
   }
 
   .header {
@@ -366,7 +369,7 @@ function homesitesHTML(community, data) {
     tbody td { padding: ${scaling.tablePad}; font-size: ${scaling.tableFont}; }
     thead th { font-size: ${scaling.headerFont}; padding: ${scaling.tablePad}; }
     
-    .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; }
+    .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; flex: 1; }
     .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: ${scale === 'normal' ? '16px' : '8px'}; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scaling.infoGap}; font-size: ${scaling.infoFont}; }
     .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: ${scale === 'normal' ? '6px' : '4px'}; letter-spacing: 0.5px; }
@@ -480,7 +483,7 @@ function basePricesHTML(community, data) {
     thead th { font-size: ${scaling.headerFont}; padding: ${scaling.tablePad}; }
     ${scale !== 'normal' ? `.header { margin-bottom: 10px; padding-bottom: 8px; }` : ''}
     
-    .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; }
+    .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; flex: 1; }
     .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: ${scale === 'normal' ? '16px' : '8px'}; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scaling.infoGap}; font-size: ${scaling.infoFont}; }
     .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: ${scale === 'normal' ? '6px' : '4px'}; letter-spacing: 0.5px; }
