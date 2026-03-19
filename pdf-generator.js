@@ -383,18 +383,19 @@ function homesitesHTML(community, data) {
                 ${info.highlights.map(h => `<li>${h}</li>`).join('')}
               </ul>
             </div>
+            ${community.sales_office_address || community.sales_office_city || community.sales_office_hours ? `
             <div class="sales-office">
               <h3>Sales Office</h3>
-              <p>${community.sales_office_address || ''}<br>
-              ${community.sales_office_city || ''}<br>
-              Office Hours: ${community.sales_office_hours || ''}</p>
-            </div>
+              <p>${community.sales_office_address || ''}${community.sales_office_address && community.sales_office_city ? '<br>' : ''}
+              ${community.sales_office_city || ''}${community.sales_office_hours ? '<br>Office Hours: ' + community.sales_office_hours : ''}</p>
+            </div>` : ''}
+            ${community.sales_manager_name || community.sales_manager_phone ? `
             <div class="sales-manager">
-              <h3 style="font-style:italic;">${community.sales_manager_name || ''}</h3>
+              ${community.sales_manager_name ? `<h3 style="font-style:italic;">${community.sales_manager_name}</h3>` : ''}
               <p>Community Sales Manager</p>
-              <p>${community.sales_office_address || ''}${community.sales_office_city ? ', ' + community.sales_office_city : ''}</p>
-              <p class="phone">${community.sales_manager_phone || ''}</p>
-            </div>
+              ${community.sales_office_address || community.sales_office_city ? `<p>${community.sales_office_address || ''}${community.sales_office_city ? (community.sales_office_address ? ', ' : '') + community.sales_office_city : ''}</p>` : ''}
+              ${community.sales_manager_phone ? `<p class="phone">${community.sales_manager_phone}</p>` : ''}
+            </div>` : ''}
           </div>
           <div>
             <div class="info-section">
@@ -502,18 +503,19 @@ function basePricesHTML(community, data) {
                 ${info.highlights.map(h => `<li>${h}</li>`).join('')}
               </ul>
             </div>
+            ${community.sales_office_address || community.sales_office_city || community.sales_office_hours ? `
             <div class="sales-office">
               <h3>Sales Office</h3>
-              <p>${community.sales_office_address || ''}<br>
-              ${community.sales_office_city || ''}<br>
-              Office Hours: ${community.sales_office_hours || ''}</p>
-            </div>
+              <p>${community.sales_office_address || ''}${community.sales_office_address && community.sales_office_city ? '<br>' : ''}
+              ${community.sales_office_city || ''}${community.sales_office_hours ? '<br>Office Hours: ' + community.sales_office_hours : ''}</p>
+            </div>` : ''}
+            ${community.sales_manager_name || community.sales_manager_phone ? `
             <div class="sales-manager">
-              <h3 style="font-style:italic;">${community.sales_manager_name || ''}</h3>
+              ${community.sales_manager_name ? `<h3 style="font-style:italic;">${community.sales_manager_name}</h3>` : ''}
               <p>Community Sales Manager</p>
-              <p>${community.sales_office_address || ''}${community.sales_office_city ? ', ' + community.sales_office_city : ''}</p>
-              <p class="phone">${community.sales_manager_phone || ''}</p>
-            </div>
+              ${community.sales_office_address || community.sales_office_city ? `<p>${community.sales_office_address || ''}${community.sales_office_city ? (community.sales_office_address ? ', ' : '') + community.sales_office_city : ''}</p>` : ''}
+              ${community.sales_manager_phone ? `<p class="phone">${community.sales_manager_phone}</p>` : ''}
+            </div>` : ''}
           </div>
           <div>
             <div class="info-section">
@@ -633,12 +635,13 @@ function availableHomesHTML(community, data) {
               </ul>
               <p>The warranty is fully transferable for a period of 10 years</p>
             </div>
+            ${community.sales_manager_name || community.sales_manager_phone || community.sales_manager_email ? `
             <div class="sales-manager">
               <h3>Community Sales Manager</h3>
-              <h3 style="font-style:italic; margin-top:4px;">${community.sales_manager_name || ''}</h3>
-              <p class="phone">${community.sales_manager_phone || ''}</p>
-              <p class="email">${community.sales_manager_email || ''}</p>
-            </div>
+              ${community.sales_manager_name ? `<h3 style="font-style:italic; margin-top:4px;">${community.sales_manager_name}</h3>` : ''}
+              ${community.sales_manager_phone ? `<p class="phone">${community.sales_manager_phone}</p>` : ''}
+              ${community.sales_manager_email ? `<p class="email">${community.sales_manager_email}</p>` : ''}
+            </div>` : ''}
           </div>
           <div>
             <div class="info-section">
