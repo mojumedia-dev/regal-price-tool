@@ -313,10 +313,10 @@ function homesitesHTML(community, data) {
   const scale = rowCount <= 8 ? 'normal' : rowCount <= 12 ? 'compact' : rowCount <= 20 ? 'dense' : 'ultra';
   
   const scaling = {
-    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
-    compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px' },
-    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' },
-    ultra: { tablePad: '4px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '8px', infoH3: '8.5px' }
+    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '30px', communityH2: '26px', infoFont: '10px', infoH3: '11px', infoGap: '18px' },
+    compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '24px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px', infoGap: '16px' },
+    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px', infoGap: '14px' },
+    ultra: { tablePad: '4px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '8px', infoH3: '8.5px', infoGap: '12px' }
   }[scale];
 
   const rows = data.map(d => `
@@ -335,18 +335,18 @@ function homesitesHTML(community, data) {
     thead th { font-size: ${scaling.headerFont}; padding: ${scaling.tablePad}; }
     
     .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: ${scaling.infoFont}; }
-    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: 1.3; color: #444; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: ${scale === 'normal' ? '16px' : '8px'}; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scaling.infoGap}; font-size: ${scaling.infoFont}; }
+    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: ${scale === 'normal' ? '6px' : '4px'}; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
-    .sales-office { margin-top: 6px; }
+    .sales-office { margin-top: ${scale === 'normal' ? '10px' : '6px'}; }
     .sales-office h3 { font-size: ${scaling.infoH3}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
-    .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '12px' : '11px'}; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: ${scale === 'normal' ? '13px' : '12px'}; font-weight: 300; color: #2D2D2D; }
+    .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
+    .sales-manager { margin-top: ${scale === 'normal' ? '10px' : '6px'}; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '14px' : '11px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '15px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
   </style></head><body>
     <div class="page">
@@ -423,10 +423,10 @@ function basePricesHTML(community, data) {
   const scale = rowCount <= 6 ? 'normal' : rowCount <= 10 ? 'compact' : rowCount <= 20 ? 'dense' : 'ultra';
   
   const scaling = {
-    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
-    compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px' },
-    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' },
-    ultra: { tablePad: '4px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '8px', infoH3: '8.5px' }
+    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '30px', communityH2: '26px', infoFont: '10px', infoH3: '11px', infoGap: '18px' },
+    compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '24px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px', infoGap: '16px' },
+    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px', infoGap: '14px' },
+    ultra: { tablePad: '4px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '8px', infoH3: '8.5px', infoGap: '12px' }
   }[scale];
 
   const rowPad = scaling.tablePad;
@@ -451,18 +451,18 @@ function basePricesHTML(community, data) {
     ${scale !== 'normal' ? `.header { margin-bottom: 10px; padding-bottom: 8px; }` : ''}
     
     .community-info { margin-top: ${scaling.communityTop}; page-break-inside: avoid; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: ${scaling.infoFont}; }
-    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: 1.3; color: #444; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: ${scale === 'normal' ? '16px' : '8px'}; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scaling.infoGap}; font-size: ${scaling.infoFont}; }
+    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: ${scale === 'normal' ? '6px' : '4px'}; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
-    .sales-office { margin-top: 6px; }
+    .sales-office { margin-top: ${scale === 'normal' ? '10px' : '6px'}; }
     .sales-office h3 { font-size: ${scaling.infoH3}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
-    .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
-    .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '12px' : '11px'}; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: ${scale === 'normal' ? '13px' : '12px'}; font-weight: 300; color: #2D2D2D; }
+    .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
+    .sales-manager { margin-top: ${scale === 'normal' ? '10px' : '6px'}; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '14px' : '11px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '15px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
   </style></head><body>
     <div class="page">
@@ -542,10 +542,10 @@ function availableHomesHTML(community, data) {
   const scale = rowCount <= 8 ? 'normal' : rowCount <= 13 ? 'compact' : rowCount <= 20 ? 'dense' : 'ultra';
   
   const scaling = {
-    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
-    compact: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '19px', infoFont: '8.5px', infoH3: '9px' },
-    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '17px', infoFont: '8px', infoH3: '8.5px' },
-    ultra: { tablePad: '4px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '15px', infoFont: '7.5px', infoH3: '8px' }
+    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '30px', communityH2: '26px', infoFont: '10px', infoH3: '11px', infoGap: '18px' },
+    compact: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '22px', infoFont: '9px', infoH3: '9.5px', infoGap: '14px' },
+    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '19px', infoFont: '8.5px', infoH3: '9px', infoGap: '12px' },
+    ultra: { tablePad: '4px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '15px', infoFont: '7.5px', infoH3: '8px', infoGap: '10px' }
   }[scale];
 
   const rows = data.map(d => `
@@ -571,20 +571,20 @@ function availableHomesHTML(community, data) {
     
     .header-row { display: flex; justify-content: space-between; align-items: flex-end; }
     .community-info { margin-top: ${scaling.communityTop}; }
-    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: 8px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scale === 'normal' ? '12px' : '10px'}; font-size: ${scaling.infoFont}; }
-    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: 4px; letter-spacing: 0.5px; }
-    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: 1.3; color: #444; }
+    .community-info h2 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scaling.communityH2}; font-style: italic; color: #2D2D2D; margin-bottom: ${scale === 'normal' ? '14px' : '8px'}; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${scaling.infoGap}; font-size: ${scaling.infoFont}; }
+    .info-section h3 { font-size: ${scaling.infoH3}; font-weight: 700; text-transform: uppercase; color: #6B1D2A; margin-bottom: ${scale === 'normal' ? '6px' : '4px'}; letter-spacing: 0.5px; }
+    .info-section p, .info-section li { font-size: ${scaling.infoFont}; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; color: #444; }
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
-    .warranty-section { margin-top: ${scale === 'normal' ? '6px' : '4px'}; }
-    .sales-manager { margin-top: ${scale === 'normal' ? '6px' : '4px'}; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '12px' : '11px'}; font-style: italic; color: #2D2D2D; }
-    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: ${scale === 'normal' ? '13px' : '12px'}; font-weight: 300; color: #2D2D2D; }
+    .warranty-section { margin-top: ${scale === 'normal' ? '8px' : '4px'}; }
+    .sales-manager { margin-top: ${scale === 'normal' ? '8px' : '4px'}; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '13px' : '11px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '14px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .sales-manager .email { font-size: ${scaling.infoFont}; color: #444; }
     .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
     .tax-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: ${scaling.infoFont}; }
-    .school-section p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
+    .school-section p { font-size: ${scaling.infoFont}; color: #444; line-height: ${scale === 'normal' ? '1.5' : '1.3'}; }
   </style></head><body>
     <div class="page">
       <div class="header">
@@ -698,8 +698,8 @@ async function generatePDF(type, community, data, outputPath) {
         <span style="width: 2px; height: 14px; background: white;"></span>
         <span>${community.phone || '385-446-5524'}</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-start;">
-        <img src="${ehoDataUrl}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0;">
+      <div style="display: flex; align-items: flex-start; gap: 8px; justify-content: flex-start;">
+        <img src="${ehoDataUrl}" style="width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; margin-top: 0;">
         <div style="font-size: 7px; line-height: 1.4; text-align: left; opacity: 0.9; flex: 1;">
           Pricing and specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and may include upgraded options available for purchase at a higher cost that are not included in the base price of the home, whether visually represented as optional or not. Please contact us to review plans, pricing, options, incentives and availability. Marketed by Regal Homes Realty. ${dateStr}
         </div>
