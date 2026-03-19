@@ -378,9 +378,9 @@ function homesitesHTML(community, data) {
   const scale = rowCount <= 8 ? 'normal' : rowCount <= 12 ? 'compact' : 'dense';
   
   const scaling = {
-    normal: { tablePad: '7px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '20px', infoFont: '8.5px', infoH3: '9px' },
-    compact: { tablePad: '6px', tableFont: '9.5px', headerFont: '8.5px', communityTop: '16px', communityH2: '18px', infoFont: '8px', infoH3: '8.5px' },
-    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '7.5px', infoH3: '8px' }
+    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
+    compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px' },
+    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' }
   }[scale];
 
   const rows = data.map(d => `
@@ -408,9 +408,9 @@ function homesitesHTML(community, data) {
     .sales-office h3 { font-size: ${scaling.infoH3}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
     .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
     .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '10px' : '9px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '12px' : '11px'}; font-style: italic; color: #2D2D2D; }
     .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: ${scale === 'normal' ? '11px' : '10px'}; font-weight: 300; color: #2D2D2D; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '13px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
   </style></head><body>
     <div class="page">
@@ -488,9 +488,9 @@ function basePricesHTML(community, data) {
   const scale = rowCount <= 6 ? 'normal' : rowCount <= 10 ? 'compact' : 'dense';
   
   const scaling = {
-    normal: { tablePad: '7px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '20px', infoFont: '8.5px', infoH3: '9px' },
-    compact: { tablePad: '6px', tableFont: '9.5px', headerFont: '8.5px', communityTop: '16px', communityH2: '18px', infoFont: '8px', infoH3: '8.5px' },
-    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '7.5px', infoH3: '8px' }
+    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
+    compact: { tablePad: '7px', tableFont: '10.5px', headerFont: '9.5px', communityTop: '18px', communityH2: '20px', infoFont: '9px', infoH3: '9.5px' },
+    dense: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '18px', infoFont: '8.5px', infoH3: '9px' }
   }[scale];
 
   const rowPad = scaling.tablePad;
@@ -524,9 +524,9 @@ function basePricesHTML(community, data) {
     .sales-office h3 { font-size: ${scaling.infoH3}; font-weight: 700; font-style: italic; color: #6B1D2A; text-transform: uppercase; letter-spacing: 0.5px; }
     .sales-office p { font-size: ${scaling.infoFont}; color: #444; line-height: 1.3; }
     .sales-manager { margin-top: 6px; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '10px' : '9px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '12px' : '11px'}; font-style: italic; color: #2D2D2D; }
     .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: ${scale === 'normal' ? '11px' : '10px'}; font-weight: 300; color: #2D2D2D; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '13px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
   </style></head><body>
     <div class="page">
@@ -607,9 +607,9 @@ function availableHomesHTML(community, data) {
   const scale = rowCount <= 8 ? 'normal' : rowCount <= 13 ? 'compact' : 'dense';
   
   const scaling = {
-    normal: { tablePad: '7px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '20px', infoFont: '8.5px', infoH3: '9px' },
-    compact: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '17px', infoFont: '7.5px', infoH3: '8px' },
-    dense: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '12px', communityH2: '15px', infoFont: '7px', infoH3: '7.5px' }
+    normal: { tablePad: '8px', tableFont: '11px', headerFont: '10px', communityTop: '22px', communityH2: '22px', infoFont: '9.5px', infoH3: '10px' },
+    compact: { tablePad: '6px', tableFont: '10px', headerFont: '9px', communityTop: '16px', communityH2: '19px', infoFont: '8.5px', infoH3: '9px' },
+    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '17px', infoFont: '8px', infoH3: '8.5px' }
   }[scale];
 
   const rows = data.map(d => `
@@ -642,9 +642,9 @@ function availableHomesHTML(community, data) {
     .info-section ul { list-style: disc; padding-left: 12px; margin: 0; }
     .warranty-section { margin-top: ${scale === 'normal' ? '6px' : '4px'}; }
     .sales-manager { margin-top: ${scale === 'normal' ? '6px' : '4px'}; }
-    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '10px' : '9px'}; font-style: italic; color: #2D2D2D; }
+    .sales-manager h3 { font-family: 'Playfair Display', Georgia, serif; font-size: ${scale === 'normal' ? '12px' : '11px'}; font-style: italic; color: #2D2D2D; }
     .sales-manager p { font-size: ${scaling.infoFont}; color: #666; line-height: 1.3; }
-    .sales-manager .phone { font-size: ${scale === 'normal' ? '11px' : '10px'}; font-weight: 300; color: #2D2D2D; }
+    .sales-manager .phone { font-size: ${scale === 'normal' ? '13px' : '12px'}; font-weight: 300; color: #2D2D2D; }
     .sales-manager .email { font-size: ${scaling.infoFont}; color: #444; }
     .utility-row { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 1px 0; font-size: ${scaling.infoFont}; }
     .tax-row { display: flex; justify-content: space-between; padding: 1px 0; font-size: ${scaling.infoFont}; }
