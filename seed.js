@@ -117,7 +117,7 @@ const insertComm = db.prepare(`INSERT OR REPLACE INTO communities (id, name, slu
 insertComm.run(1, 'Parkside', 'parkside', '385-446-5524', '2458 W Aurora Ave', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com', '14565');
 insertComm.run(2, 'Bella Vita', 'bella-vita', '801-598-4949', '526 N Legend Way', 'MAPLETON, UT 84664', 'Monday - Saturday  11am - 5pm', 'Gary Hansen', '801-598-4949', 'Gary.H@RegalUT.com', '14559');
 insertComm.run(3, 'Bristol Farms', 'bristol-farms', '385-503-5375', '1722 S 4300 W', 'OGDEN, UT 84401', 'Monday - Saturday  11am - 5pm', 'Tristan Hamblin', '385-310-6871', 'tristan@regalut.com', '15250');
-insertComm.run(4, 'Amanti Lago', 'amanti-lago', '385-481-5139', '1757 W Amanti Lago Court', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Mindee Gurney', '801-836-4943', 'Mindee.RegalHomes@gmail.com', '14558');
+insertComm.run(4, 'Amanti Lago', 'amanti-lago', '385-481-5139', '1757 W Amanti Lago Court', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Melinda Balsterholt', '801-656-9183', 'melinda@regalut.com', '14558');
 insertComm.run(5, 'Windflower', 'windflower', '385-481-3475', '1901 S Sawmill Blvd', 'HEBER CITY, UT 84032', 'Monday - Saturday  11am - 5pm', 'Marissa Burdett', '385-481-3475', 'marissa@regalut.com', '14566');
 
 // Assign all communities to users
