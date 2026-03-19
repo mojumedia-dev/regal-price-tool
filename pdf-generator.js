@@ -194,7 +194,7 @@ const commonStyles = `
     width: 8.5in;
     height: 11in;
     position: relative;
-    padding: 0.4in 0.5in 1.0in 0.5in;
+    padding: 0.35in 0.5in 0.85in 0.5in;
     overflow: hidden;
   }
 
@@ -378,9 +378,9 @@ function homesitesHTML(community, data) {
   const scale = rowCount <= 8 ? 'normal' : rowCount <= 12 ? 'compact' : 'dense';
   
   const scaling = {
-    normal: { tablePad: '6px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '18px', infoFont: '7.5px', infoH3: '8px' },
-    compact: { tablePad: '5px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '16px', infoFont: '7px', infoH3: '7.5px' },
-    dense: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '10px', communityH2: '14px', infoFont: '6.5px', infoH3: '7px' }
+    normal: { tablePad: '7px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '20px', infoFont: '8.5px', infoH3: '9px' },
+    compact: { tablePad: '6px', tableFont: '9.5px', headerFont: '8.5px', communityTop: '16px', communityH2: '18px', infoFont: '8px', infoH3: '8.5px' },
+    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '7.5px', infoH3: '8px' }
   }[scale];
 
   const rows = data.map(d => `
@@ -488,9 +488,9 @@ function basePricesHTML(community, data) {
   const scale = rowCount <= 6 ? 'normal' : rowCount <= 10 ? 'compact' : 'dense';
   
   const scaling = {
-    normal: { tablePad: '6px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '18px', infoFont: '7.5px', infoH3: '8px' },
-    compact: { tablePad: '5px', tableFont: '8.5px', headerFont: '7.5px', communityTop: '12px', communityH2: '16px', infoFont: '7px', infoH3: '7.5px' },
-    dense: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '10px', communityH2: '14px', infoFont: '6.5px', infoH3: '7px' }
+    normal: { tablePad: '7px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '20px', infoFont: '8.5px', infoH3: '9px' },
+    compact: { tablePad: '6px', tableFont: '9.5px', headerFont: '8.5px', communityTop: '16px', communityH2: '18px', infoFont: '8px', infoH3: '8.5px' },
+    dense: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '16px', infoFont: '7.5px', infoH3: '8px' }
   }[scale];
 
   const rowPad = scaling.tablePad;
@@ -607,9 +607,9 @@ function availableHomesHTML(community, data) {
   const scale = rowCount <= 8 ? 'normal' : rowCount <= 13 ? 'compact' : 'dense';
   
   const scaling = {
-    normal: { tablePad: '6px', tableFont: '9px', headerFont: '8px', communityTop: '16px', communityH2: '18px', infoFont: '7.5px', infoH3: '8px' },
-    compact: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '10px', communityH2: '16px', infoFont: '7px', infoH3: '7.5px' },
-    dense: { tablePad: '3px', tableFont: '7px', headerFont: '6.5px', communityTop: '8px', communityH2: '14px', infoFont: '6.5px', infoH3: '7px' }
+    normal: { tablePad: '7px', tableFont: '10px', headerFont: '9px', communityTop: '20px', communityH2: '20px', infoFont: '8.5px', infoH3: '9px' },
+    compact: { tablePad: '5px', tableFont: '9px', headerFont: '8px', communityTop: '14px', communityH2: '17px', infoFont: '7.5px', infoH3: '8px' },
+    dense: { tablePad: '4px', tableFont: '8px', headerFont: '7px', communityTop: '12px', communityH2: '15px', infoFont: '7px', infoH3: '7.5px' }
   }[scale];
 
   const rows = data.map(d => `
