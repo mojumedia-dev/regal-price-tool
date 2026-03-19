@@ -181,16 +181,28 @@ function renderSalesManagers(community, showHeader = false) {
   
   if (managers.length === 0) return '';
   
-  return `<div class="sales-manager">
-    ${showHeader ? '<h3>Community Sales Manager</h3>' : ''}
-    ${managers.map((mgr, i) => `
-      ${mgr.name ? `<h3 style="font-style:italic;${(i > 0 || showHeader) ? ' margin-top:4px;' : ''}">${mgr.name}</h3>` : ''}
-      ${!showHeader && i === 0 ? '<p>Community Sales Manager</p>' : ''}
-      ${mgr.phone ? `<p class="phone">${mgr.phone}</p>` : ''}
-      ${mgr.email ? `<p class="email">${mgr.email}</p>` : ''}
-      ${i < managers.length - 1 && !showHeader ? '<div style="margin-top:8px;"></div>' : ''}
-    `).join('')}
-  </div>`;
+  if (showHeader) {
+    // Available Homes style - show all managers together with header
+    return `<div class="sales-manager">
+      <h3>Community Sales Manager${managers.length > 1 ? 's' : ''}</h3>
+      ${managers.map((mgr, i) => `
+        ${mgr.name ? `<h3 style="font-style:italic; margin-top:4px;">${mgr.name}</h3>` : ''}
+        ${mgr.phone ? `<p class="phone">${mgr.phone}</p>` : ''}
+        ${mgr.email ? `<p class="email">${mgr.email}</p>` : ''}
+        ${i < managers.length - 1 ? '<div style="height:12px;"></div>' : ''}
+      `).join('')}
+    </div>`;
+  } else {
+    // Homesites/Base Prices style - each manager in own box
+    return managers.map((mgr, i) => `
+      <div class="sales-manager" style="${i > 0 ? 'margin-top:12px;' : ''}">
+        ${mgr.name ? `<h3 style="font-style:italic;">${mgr.name}</h3>` : ''}
+        <p>Community Sales Manager</p>
+        ${mgr.phone ? `<p class="phone">${mgr.phone}</p>` : ''}
+        ${mgr.email ? `<p class="email">${mgr.email}</p>` : ''}
+      </div>
+    `).join('');
+  }
 }
 
 const commonStyles = `
