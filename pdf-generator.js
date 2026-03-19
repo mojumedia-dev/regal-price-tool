@@ -309,7 +309,7 @@ const commonStyles = `
 
   .footer-bottom {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     padding: 0 0.3in;
   }
@@ -326,8 +326,9 @@ const commonStyles = `
   .footer-disclaimer {
     font-size: 7px;
     line-height: 1.4;
-    text-align: center;
+    text-align: left;
     opacity: 0.9;
+    flex: 1;
   }
 
   .eho-icon {
