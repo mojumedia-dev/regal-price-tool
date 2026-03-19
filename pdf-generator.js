@@ -158,9 +158,14 @@ const commonStyles = `
   }
 
   .footer-eho {
-    width: 28px;
-    height: 28px;
+    width: 38px;
+    height: 38px;
+    background: white;
+    padding: 5px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .footer-disclaimer {
@@ -193,9 +198,11 @@ function footerHTML(community) {
         <span>${community.phone || '385-446-5524'}</span>
       </div>
       <div class="footer-bottom">
-        <img src="${ehoDataUrl}" style="width:28px;height:28px;object-fit:contain;">
+        <div class="footer-eho">
+          <img src="${ehoDataUrl}" style="width:28px;height:28px;object-fit:contain;">
+        </div>
         <div class="footer-disclaimer">
-          Pricing ans specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and
+          Pricing and specifications subject to change without notice. Floor plan image renderings & exterior elevation renderings are for illustrative purposes only and
           may include upgraded options available for purchase at a higher cost that are not included in the base price of the home, whether visually represented as
           optional or not. Please contact us to review plans, pricing, options, incentives and availability. Marketed by Regal Homes Realty. ${dateStr}
         </div>
