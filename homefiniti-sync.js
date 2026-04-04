@@ -4,6 +4,7 @@
  */
 
 const puppeteer = require('puppeteer');
+const { enqueueBrowserTask } = require('./browser-queue');
 
 const HOMEFINITI_URL = 'https://app.homefiniti.com';
 const HOMEFINITI_EMAIL = process.env.HOMEFINITI_EMAIL || 'regalhomes.adam@gmail.com';
@@ -42,7 +43,14 @@ function getHomefinitiPlanId(planName) {
 async function launchBrowser() {
   return puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-zygote',
+      '--disable-blink-features=AutomationControlled',
+    ],
     defaultViewport: { width: 1400, height: 900 },
   });
 }
@@ -96,6 +104,7 @@ async function updatePlanPrice(planName, newPrice) {
   }
 
   console.log(`[Homefiniti] Plan "${planName}" mapped to ID ${homefinitiId}`);
+  return enqueueBrowserTask(async () => {
   let browser;
   try {
     browser = await launchBrowser();
@@ -178,6 +187,7 @@ async function updatePlanPrice(planName, newPrice) {
   } finally {
     if (browser) await browser.close();
   }
+  }); // end enqueueBrowserTask
 }
 
 /**
@@ -185,6 +195,7 @@ async function updatePlanPrice(planName, newPrice) {
  */
 async function syncMultiplePrices(updates) {
   if (!updates.length) return [];
+  return enqueueBrowserTask(async () => {
   let browser;
   const results = [];
 
@@ -256,6 +267,7 @@ async function syncMultiplePrices(updates) {
   }
 
   return results;
+  }); // end enqueueBrowserTask
 }
 
 /**
@@ -264,7 +276,8 @@ async function syncMultiplePrices(updates) {
  */
 async function updateSpecPrice(specId, newPrice, homeName) {
   console.log(`[Homefiniti] Syncing inventory home: specId=${specId}, price=$${newPrice}, name="${homeName}"`);
-  
+
+  return enqueueBrowserTask(async () => {
   let browser;
   try {
     browser = await launchBrowser();
@@ -338,6 +351,7 @@ async function updateSpecPrice(specId, newPrice, homeName) {
   } finally {
     if (browser) await browser.close();
   }
+  }); // end enqueueBrowserTask
 }
 
 module.exports = {

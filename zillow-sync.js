@@ -4,6 +4,7 @@
  */
 
 const puppeteer = require('puppeteer');
+const { enqueueBrowserTask } = require('./browser-queue');
 
 const NHF_LOGIN_URL = 'https://newhomefeed.com/login';
 const NHF_BASE_URL = 'https://my.newhomefeed.com';
@@ -63,7 +64,14 @@ function getZillowPlanId(planName) {
 async function launchBrowser() {
   return puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-zygote',
+      '--disable-blink-features=AutomationControlled',
+    ],
     defaultViewport: { width: 1400, height: 900 },
   });
 }
@@ -105,6 +113,7 @@ async function updatePlanPrice(planName, newPrice) {
     };
   }
 
+  return enqueueBrowserTask(async () => {
   let browser;
   try {
     browser = await launchBrowser();
@@ -166,6 +175,7 @@ async function updatePlanPrice(planName, newPrice) {
   } finally {
     if (browser) await browser.close();
   }
+  }); // end enqueueBrowserTask
 }
 
 /**
@@ -173,6 +183,7 @@ async function updatePlanPrice(planName, newPrice) {
  */
 async function syncMultiplePrices(updates) {
   if (!updates.length) return [];
+  return enqueueBrowserTask(async () => {
   let browser;
   const results = [];
 
@@ -227,6 +238,7 @@ async function syncMultiplePrices(updates) {
   }
 
   return results;
+  }); // end enqueueBrowserTask
 }
 
 module.exports = {
